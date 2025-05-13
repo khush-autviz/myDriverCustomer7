@@ -73,19 +73,21 @@ export default function Signin() {
         backgroundColor: Black,
         flex: 1,
         paddingTop: 70,
-        paddingHorizontal: 20,
+        // marginHorizontal: 20,
       }}>
+        <View style={{flex: 1, marginHorizontal: 20}}>
       {/* <Logo height={100} /> */}
       <Image source={require('../../assets/logo/mainLogo.png')} height={100} style={{marginTop: 15}} />
 
       <Text style={{color: White, fontWeight: '500', fontSize: 24, marginTop: 50}}>
         Sign In
       </Text>
+      <Text style={{color: Gray, marginTop: 20, fontSize: 15}}>Phone Number</Text>
       <TextInput
         style={{
           borderColor: White,
           borderWidth: 1,
-          marginTop: 40,
+          marginTop: 5,
           paddingHorizontal: 20,
           height: 50,
           borderRadius: 8,
@@ -95,6 +97,7 @@ export default function Signin() {
         onChangeText={text => setnumber(text)}
         keyboardType="phone-pad"
         placeholder="Enter the Phone Number"
+        placeholderTextColor={Gray}
       />
       <TouchableOpacity
         style={{
@@ -130,6 +133,7 @@ export default function Signin() {
           </Text>
         </TouchableOpacity>
       </View> */}
+      </View>
     </SafeAreaView>
   );
 }

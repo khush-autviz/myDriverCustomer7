@@ -230,7 +230,7 @@ export default function App() {
 
         {/* Auth Screens */}
         {/* <Stack.Screen name="Signin" component={Signin} /> */}
-        <Stack.Screen name="Signin" component={MainTabs} />
+        <Stack.Screen name="Signin" component={Signin} />
         <Stack.Screen name="Signup" component={Signup} />
         <Stack.Screen name="OtpScreen" component={OtpScreen} />
         <Stack.Screen name="Location" component={Location} />
