@@ -25,6 +25,7 @@ export default function OtpScreen() {
   const [otp, setOtp] = useState(['', '', '', '']);
   const navigation: any = useNavigation();
   const SETUSER = useAuthStore(state => state.setUser)
+  const SETTOKEN = useAuthStore(state => state.setToken)
 
   const inputRefs = [
     useRef<TextInput>(null),
@@ -86,6 +87,7 @@ export default function OtpScreen() {
     onSuccess: (response) => {
       console.log("verify otp mutation success", response);
       if (response.data.data.user.registrationComplete) {
+        SETTOKEN({access_token: response.data.data.access_token, refresh_token: response.data.data.refresh_token})
         SETUSER(response.data.data.user)
         navigation.navigate('Main')
       } else {

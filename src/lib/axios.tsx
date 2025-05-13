@@ -13,8 +13,8 @@ const authStore = useAuthStore.getState();
 token = authStore.token;
 
 instance.interceptors.request.use((config) => {
-  // config.baseURL = 'http://localhost:3001'; // change this to your IP address
-  config.baseURL = 'http://3.110.180.116:3000/'; // change this to your IP address
+  config.baseURL = 'https://t1wfswdh-3001.inc1.devtunnels.ms/'; // change this to your IP address
+  // config.baseURL = 'http://3.110.180.116:3000/'; // change this to your IP address
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

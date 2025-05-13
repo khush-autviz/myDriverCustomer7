@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {Black, Gold, Gray, White} from '../../constants/Color';
+import {Black, DarkGray, Gold, Gray, White} from '../../constants/Color';
 import {useNavigation} from '@react-navigation/native';
 import {useMutation} from '@tanstack/react-query';
 import {authSignin} from '../../constants/Api';
@@ -83,7 +83,7 @@ export default function Signin() {
           onChangeFormattedText={(text) => {
             setFormattedValue(text);
           }}
-          disableArrowIcon={false}
+          // disableArrowIcon={false}
           containerStyle={{
             marginTop: 10,
             width: '100%',
@@ -104,17 +104,17 @@ export default function Signin() {
             padding: 0,
           }}
           codeTextStyle={{
-            color: White,
+            color: Gray,
             marginTop: 0,
             padding: 0,
           }}
-          flagButtonStyle={{
-            backgroundColor: 'transparent',
-            height: 50,
-          }}
-          countryPickerButtonStyle={{
-            height: 50,
-          }}
+          // flagButtonStyle={{
+          //   backgroundColor: 'transparent',
+          //   height: 50,
+          // }}
+          // countryPickerButtonStyle={{
+          //   height: 50,
+          // }}
         />
         
         <TouchableOpacity
