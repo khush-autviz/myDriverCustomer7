@@ -1,70 +1,48 @@
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import {
   Image,
   SafeAreaView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import {Black, Gold, Gray, White} from '../../constants/Color';
 import {useNavigation} from '@react-navigation/native';
-import axios from 'axios';
-import Logo from '../../assets/logo/mainLogo.svg';
-import { useMutation } from '@tanstack/react-query';
-import { authSignin } from '../../constants/Api';
+import {useMutation} from '@tanstack/react-query';
+import {authSignin} from '../../constants/Api';
+import PhoneInput from 'react-native-phone-number-input';
 
 export default function Signin() {
   const navigation: any = useNavigation();
-  const [number, setnumber] = useState('');
-  const [mobileNumber, setmobileNumber] = useState('')
+  const [value, setValue] = useState('');
+  const [formattedValue, setFormattedValue] = useState('');
+  const [mobileNumber, setmobileNumber] = useState('');
+  const phoneInput = useRef<PhoneInput>(null);
 
-
-    // signin or signup mutation
-    const authMutation = useMutation({
-      mutationFn: authSignin,
-      onSuccess: (response) => {
-        console.log('auth mutation success', response);
-        // if (response.data.data.existingUser == false) {
-        //     navigation.navigate('Signup', {mobileNumber});
-        //   } else {
-            navigation.navigate('OtpScreen', {mobileNumber});
-          // }
-      },
-      onError: (error: any) => {
-        console.log('auth mutation error', error);
-      }
-    })
+  // signin or signup mutation
+  const authMutation = useMutation({
+    mutationFn: authSignin,
+    onSuccess: (response) => {
+      console.log('auth mutation success', response);
+      navigation.navigate('OtpScreen', {mobileNumber});
+    },
+    onError: (error: any) => {
+      console.log('auth mutation error', error);
+    },
+  });
 
   const handleSignin = async () => {
-    if (number.trim() === '') {
-      console.log("empty number");
-      
+    if (value.trim() === '') {
+      console.log('empty number');
       return null;
     }
 
-    // try {
-      const phone = `+91${number}`;
-      setmobileNumber(phone)
-      console.log('phone', phone);
+    const phone = formattedValue;
+    setmobileNumber(phone);
+    console.log('phone', phone);
 
-      // const response = await axios.post('http://localhost:3000/auth/signin', {
-      //   phone,
-      // });
-
-      // console.log('signin success', response);
-
-      // if (response.data.data.existingUser == false) {
-      //   navigation.navigate('Signup', {phone});
-      // } else {
-      //   navigation.navigate('OtpScreen', {phone});
-      // }
-
-      authMutation.mutateAsync({phone})
-    // } catch (error) {
-    //   console.log('signin error', error);
-    // }
+    authMutation.mutateAsync({phone});
   };
 
   return (
@@ -73,66 +51,85 @@ export default function Signin() {
         backgroundColor: Black,
         flex: 1,
         paddingTop: 70,
-        // marginHorizontal: 20,
       }}>
-        <View style={{flex: 1, marginHorizontal: 20}}>
-      {/* <Logo height={100} /> */}
-      <Image source={require('../../assets/logo/mainLogo.png')} height={100} style={{marginTop: 15}} />
+      <View style={{flex: 1, marginHorizontal: 20}}>
+        <Image
+          source={require('../../assets/logo/mainLogo.png')}
+          height={100}
+          style={{marginTop: 15}}
+        />
 
-      <Text style={{color: White, fontWeight: '500', fontSize: 24, marginTop: 50}}>
-        Sign In
-      </Text>
-      <Text style={{color: Gray, marginTop: 20, fontSize: 15}}>Phone Number</Text>
-      <TextInput
-        style={{
-          borderColor: White,
-          borderWidth: 1,
-          marginTop: 5,
-          paddingHorizontal: 20,
-          height: 50,
-          borderRadius: 8,
-          color: Gray,
-        }}
-        value={number}
-        onChangeText={text => setnumber(text)}
-        keyboardType="phone-pad"
-        placeholder="Enter the Phone Number"
-        placeholderTextColor={Gray}
-      />
-      <TouchableOpacity
-        style={{
-          backgroundColor: Gold,
-          height: 50,
-          borderRadius: 8,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginTop: 30,
-        }}
-        onPress={handleSignin}>
-        <Text style={{color: White, fontWeight: '500'}}>Sign In</Text>
-      </TouchableOpacity>
-      {/* <View style={styles.lineContainer}>
-        <View style={styles.line} />
-        <View style={styles.line} />
-      </View> */}
-      {/* <View
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          flexDirection: 'row',
-          marginTop: 20,
-        }}>
-        <Text style={{color: White, fontWeight: '500', fontSize: 16}}>
-          Find your account{' '}
+        <Text
+          style={{
+            color: White,
+            fontWeight: '500',
+            fontSize: 24,
+            marginTop: 50,
+          }}>
+          Sign In
         </Text>
-        <TouchableOpacity onPress={() => navigation.navigate('OtpScreen')}>
-          <Text style={{color: Gold, fontWeight: '500', fontSize: 16}}>
-            Sign Up
-          </Text>
+        <Text style={{color: Gray, marginTop: 20, fontSize: 15}}>
+          Phone Number
+        </Text>
+        
+        <PhoneInput
+          ref={phoneInput}
+          defaultValue={value}
+          defaultCode="ZA"
+          layout="first"
+          onChangeText={(text) => {
+            setValue(text);
+          }}
+          onChangeFormattedText={(text) => {
+            setFormattedValue(text);
+          }}
+          disableArrowIcon={false}
+          containerStyle={{
+            marginTop: 10,
+            width: '100%',
+            backgroundColor: 'rgba(53, 56, 63, 0.8)',
+            borderRadius: 8,
+            height: 50,
+          }}
+          textContainerStyle={{
+            backgroundColor: 'transparent',
+            borderLeftWidth: 1,
+            borderLeftColor: Gray,
+            height: 50,
+            paddingVertical: 0,
+          }}
+          textInputStyle={{
+            color: White,
+            height: 50,
+            padding: 0,
+          }}
+          codeTextStyle={{
+            color: White,
+            marginTop: 0,
+            padding: 0,
+          }}
+          flagButtonStyle={{
+            backgroundColor: 'transparent',
+            height: 50,
+          }}
+          countryPickerButtonStyle={{
+            height: 50,
+          }}
+        />
+        
+        <TouchableOpacity
+          style={{
+            backgroundColor: Gold,
+            height: 50,
+            borderRadius: 8,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: 30,
+          }}
+          onPress={handleSignin}>
+          <Text style={{color: White, fontWeight: '500'}}>Sign In</Text>
         </TouchableOpacity>
-      </View> */}
       </View>
     </SafeAreaView>
   );
