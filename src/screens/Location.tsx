@@ -30,6 +30,7 @@
 //   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 //   const [activeType, setActiveType] = useState<'pickup' | 'drop' | null>(null);
 //   const [fullLocationDescription, setFullLocationDescription] = useState('');
+//   const [currentLocationLabel, setCurrentLocationLabel] = useState('Current Location');
 
 //   const placesSearchRef = useRef<any>(null);
 
@@ -69,6 +70,8 @@
 //       setPickupLocation({ lat: coords.lat, lng: coords.lng, description });
 //       setPickupSelected(true);
 //       setActiveType(null);
+//       // If user selects a different pickup location, it's no longer the current location
+//       setCurrentLocationLabel(description);
 //     } else if (activeType === 'drop') {
 //       if (!pickupSelected) {
 //         Alert.alert('Please select your pickup location first');
@@ -106,7 +109,7 @@
 //           <PlacesSearch
 //             ref={placesSearchRef}
 //             placeholder="Pickup location"
-//             initialValue="Your Current Location"
+//             initialValue={currentLocationLabel}
 //             onPlaceSelected={handleSelect}
 //             setSuggestions={setSuggestions}
 //             setActive={() => setActiveType('pickup')}
@@ -144,6 +147,7 @@
 //     </View>
 //   );
 // }
+
 
 // const styles = StyleSheet.create({
 //   container: {
@@ -194,7 +198,7 @@
 //     color: White,
 //     fontSize: 14,
 //   },
-// });    
+// });   
 
 
 
@@ -208,7 +212,7 @@ import {
   FlatList,
   TouchableOpacity,
 } from 'react-native';
-import React, { useRef, useState, useEffect, useContext } from 'react';
+import React, { useRef, useState, useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Black, Gold, White } from '../constants/Color';
@@ -225,55 +229,22 @@ export default function Location() {
   const navigation: any = useNavigation();
   const setPickupLocation = useAuthStore((state) => state.setPickupLocation);
   const setDestinationLocation = useAuthStore((state) => state.setDestinationLocation);
-  const { location, getCurrentLocation } = useContext(LocationContext);
+  const { location } = useContext(LocationContext);
 
   const [pickupSelected, setPickupSelected] = useState(false);
   const [dropSelected, setDropSelected] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [activeType, setActiveType] = useState<'pickup' | 'drop' | null>(null);
-  const [fullLocationDescription, setFullLocationDescription] = useState('');
-  const [currentLocationLabel, setCurrentLocationLabel] = useState('Current Location');
 
-  const placesSearchRef = useRef<any>(null);
-
-  // Get current location on component mount
-  useEffect(() => {
-    const fetchCurrentLocation = async () => {
-      await getCurrentLocation();
-      if (location) {
-        // Reverse geocode to get address from coordinates
-        try {
-          const response = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=AIzaSyBcKgyA7urR7gHyen79h40UlkvTJJoKc9I`
-          );
-          const data = await response.json();
-          if (data.results && data.results.length > 0) {
-            const address = data.results[0].formatted_address;
-            setFullLocationDescription(address);
-            // Set pickup location with current coordinates and address
-            setPickupLocation({ 
-              lat: location.latitude, 
-              lng: location.longitude, 
-              description: address 
-            });
-            setPickupSelected(true);
-          }
-        } catch (error) {
-          console.error('Error getting address:', error);
-        }
-      }
-    };
-
-    fetchCurrentLocation();
-  }, []);
+  // Create separate refs for pickup and drop inputs
+  const pickupSearchRef = useRef<any>(null);
+  const dropSearchRef = useRef<any>(null);
 
   const handleSelect = (coords: { lat: number; lng: number }, description: string) => {
     if (activeType === 'pickup') {
       setPickupLocation({ lat: coords.lat, lng: coords.lng, description });
       setPickupSelected(true);
       setActiveType(null);
-      // If user selects a different pickup location, it's no longer the current location
-      setCurrentLocationLabel(description);
     } else if (activeType === 'drop') {
       if (!pickupSelected) {
         Alert.alert('Please select your pickup location first');
@@ -284,6 +255,15 @@ export default function Location() {
       setActiveType(null);
     }
     setSuggestions([]);
+  };
+
+  const handleSuggestionSelect = (placeId: string, description: string) => {
+    // Use the correct ref based on activeType
+    if (activeType === 'pickup') {
+      pickupSearchRef.current.fetchPlaceDetails(placeId, description);
+    } else if (activeType === 'drop') {
+      dropSearchRef.current.fetchPlaceDetails(placeId, description);
+    }
   };
 
   // Navigate when both locations are selected
@@ -307,19 +287,18 @@ export default function Location() {
         </View>
 
         <View style={styles.inputsColumn}>
-          {/* Pickup Location */}
+          {/* Pickup Location - with its own ref */}
           <PlacesSearch
-            ref={placesSearchRef}
+            ref={pickupSearchRef}
             placeholder="Pickup location"
-            initialValue={currentLocationLabel}
             onPlaceSelected={handleSelect}
             setSuggestions={setSuggestions}
             setActive={() => setActiveType('pickup')}
           />
 
-          {/* Drop Location */}
+          {/* Drop Location - with its own ref */}
           <PlacesSearch
-            ref={placesSearchRef}
+            ref={dropSearchRef}
             placeholder="Drop location"
             onPlaceSelected={handleSelect}
             setSuggestions={setSuggestions}
@@ -337,9 +316,7 @@ export default function Location() {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.suggestionItem}
-                onPress={() =>
-                  placesSearchRef.current.fetchPlaceDetails(item.place_id, item.description)
-                }>
+                onPress={() => handleSuggestionSelect(item.place_id, item.description)}>
                 <Text style={styles.suggestionText}>{item.description}</Text>
               </TouchableOpacity>
             )}
@@ -349,7 +326,6 @@ export default function Location() {
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -400,4 +376,4 @@ const styles = StyleSheet.create({
     color: White,
     fontSize: 14,
   },
-});   
+});

@@ -10,6 +10,7 @@ import { LocationContext } from '../context/LocationProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '../store/authStore';
 import MapViewDirections from 'react-native-maps-directions';
+import { useSocket } from '../context/SocketContext';
 
 export default function TripDetails() {
   const navigation: any = useNavigation();
@@ -21,7 +22,8 @@ export default function TripDetails() {
 
   const { location } = useContext(LocationContext)
 
-  const snapPoints = useMemo(() => ['25%', '60%'], []);
+  const snapPoints = useMemo(() => ['25%', '50%'], []);
+
 
 
   // location details
@@ -246,7 +248,7 @@ export default function TripDetails() {
                     $40
                   </Text>
                 </View>
-                <View
+                {/* <View
                   style={{
                     display: 'flex',
                     flexDirection: 'row',
@@ -283,7 +285,7 @@ export default function TripDetails() {
                   <Text style={{ color: LightGold, fontSize: 14, fontWeight: '700' }}>
                     $40
                   </Text>
-                </View>
+                </View> */}
               </ScrollView>
               {/* </View> */}
               <View
