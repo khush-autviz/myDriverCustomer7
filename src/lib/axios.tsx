@@ -10,10 +10,10 @@ const instance = axios.create({
 // Middleware-style import for Zustand (not reactive)
 let token = null;
 const authStore = useAuthStore.getState();
-token = authStore.token;
+token = authStore.token?.access_token;
 
 instance.interceptors.request.use((config) => {
-  config.baseURL = 'https://t1wfswdh-3001.inc1.devtunnels.ms/'; // change this to your IP address
+  config.baseURL = 'https://t1wfswdh-3000.inc1.devtunnels.ms/'; // change this to your IP address
   // config.baseURL = 'http://3.110.180.116:3000/'; // change this to your IP address
 
   if (token) {

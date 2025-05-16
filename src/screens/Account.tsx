@@ -24,7 +24,7 @@ export default function Account() {
   }
 
   return (
-    <SafeAreaView style={{backgroundColor: Black, flex: 1, padding: 20}}>
+    <SafeAreaView style={{backgroundColor: Black, flex: 1, paddingHorizontal: 20, paddingTop: 10}}>
       <Text style={{color: LightGold, fontSize: 32, fontWeight: '800'}}>
         {USER?.firstName + " " + USER?.lastName}
       </Text>

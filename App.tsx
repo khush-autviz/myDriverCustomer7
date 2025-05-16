@@ -11,7 +11,7 @@ import Home from './src/components/Home';
 import Onboarding from './src/screens/Onboarding';
 import Signin from './src/components/auth/Signin';
 import Signup from './src/components/auth/Signup';
-import { Gold } from './src/constants/Color';
+import { Black, Gold } from './src/constants/Color';
 import OtpScreen from './src/components/auth/OtpScreen';
 import Search from './src/components/Search';
 import Profile from './src/components/Profile';
@@ -24,6 +24,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { LocationProvider } from './src/context/LocationProvider';
 import { SocketProvider } from './src/context/SocketContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 const Tab = createBottomTabNavigator();
@@ -70,9 +71,10 @@ function MainTabs() {
 export default function App() {
   return (
     <LocationProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: Black }}>
         <QueryClientProvider client={queryClient}>
           <SocketProvider>
+            <SafeAreaView style={{ flex: 1 }}>
             <NavigationContainer>
               <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
                 {/* Splash Screen */}
@@ -93,6 +95,7 @@ export default function App() {
                 <Stack.Screen name="Main" component={MainTabs} />
               </Stack.Navigator>
             </NavigationContainer>
+            </SafeAreaView>
           </SocketProvider>
         </QueryClientProvider>
       </GestureHandlerRootView>

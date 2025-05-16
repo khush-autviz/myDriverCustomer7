@@ -17,3 +17,39 @@ export const authSignup = async (data:any) => {
     const response = await axios.post('/auth/register', data)
     return response
 }
+
+// get profile
+export const getProfile = async () => {
+    const response = await axios.get('/user/profile')
+    return response
+}
+
+// edit profile
+export const editProfile = async (data: any) => {
+    const response = await axios.patch('/user/profile/edit', data)
+    return response
+}
+
+// ride price
+export const calculateRidePrice = async (data: any) => {
+    const response = await axios.post('/vehicle/calculate-prices', data)
+    return response
+}
+
+// create ride
+export const CreateRide = async (data: any) => {
+    const response = await axios.post('/ride/create', data)
+    return response
+}
+
+// get ride
+export const getRide = async () => {
+    const response = await axios.get(`/ride`)
+    return response
+}
+
+//ride cancel
+export const cancelRide = async (data: any) => {
+    const response = await axios.patch('/ride-status/customer/cancel/{rideId}', data)
+    return response
+}

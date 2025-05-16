@@ -76,14 +76,14 @@ export default function Signin() {
           ref={phoneInput}
           defaultValue={value}
           defaultCode="ZA"
-          layout="first"
+          layout="second"
           onChangeText={(text) => {
             setValue(text);
           }}
           onChangeFormattedText={(text) => {
             setFormattedValue(text);
           }}
-          // disableArrowIcon={false}
+          disableArrowIcon={true}
           containerStyle={{
             marginTop: 10,
             width: '100%',
@@ -108,13 +108,13 @@ export default function Signin() {
             marginTop: 0,
             padding: 0,
           }}
-          // flagButtonStyle={{
-          //   backgroundColor: 'transparent',
-          //   height: 50,
-          // }}
-          // countryPickerButtonStyle={{
-          //   height: 50,
-          // }}
+          countryPickerProps={{
+            withFilter: true,
+            theme: {
+              backgroundColor: '#1a1a1a', 
+              onBackgroundTextColor: '#ffffff', 
+            },
+          }}
         />
         
         <TouchableOpacity

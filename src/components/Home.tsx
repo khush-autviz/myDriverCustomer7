@@ -36,14 +36,6 @@ export default function Home() {
   const [location, setLocation] = useState<any>(null);
   // console.log(location);
 
-const socket = useSocket()
-
-console.log("socket", socket);
-
-
-
-
-
   const [watchId, setWatchId] = useState<any>(null);
 
   // Ask for permission (Android only)
@@ -261,6 +253,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Black,
     paddingHorizontal: 20,
-    paddingTop: 30,
+    paddingTop: 10,
   },
 });

@@ -11,12 +11,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '../store/authStore';
 import MapViewDirections from 'react-native-maps-directions';
 import { useSocket } from '../context/SocketContext';
+import { useMutation } from '@tanstack/react-query';
+import { calculateRidePrice, cancelRide, CreateRide } from '../constants/Api';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TripDetails() {
   const navigation: any = useNavigation();
   const [mode, setmode] = useState('first');
+  const [ridePrices, setridePrices] = useState([])
+  const [rideDetails, setrideDetails] = useState<any>()
+  const [selctedRide, setselctedRide] = useState<any>()
   const bottomSheetRef = useRef<BottomSheet>(null);
   const screenHeight = Dimensions.get('window').height;
+  const socket = useSocket()
 
   const { pickupLocation, destinationLocation } = useAuthStore();
 
@@ -27,8 +34,6 @@ export default function TripDetails() {
 
 
   // location details
-
-
   const pickupCoord =
     pickupLocation && pickupLocation.lat !== undefined && pickupLocation.lng !== undefined
       ? { latitude: pickupLocation.lat, longitude: pickupLocation.lng }
@@ -42,25 +47,101 @@ export default function TripDetails() {
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log('handleSheetChanges', index);
-  }, []);
+  }, []);     
 
-  const logAllKeys = async () => {
-    const keys = await AsyncStorage.getAllKeys();
-    const stores = await AsyncStorage.multiGet(keys);
-    stores.forEach(([key, value]) => {
-      console.log(`${key}: ${value}`);
-    });
-  };
+  // calculate ride price
+  const RidePriceMutation = useMutation({
+    mutationFn: calculateRidePrice,
+    onSuccess: (response) => {
+      console.log('ride price success', response);
+      setridePrices(response.data.data.priceEstimates)
+    },
+    onError: (error) => {
+      console.log('ride price error', error);
+    },
+  })
+
+  //create ride
+  const CreateRideMutation = useMutation({
+    mutationFn: CreateRide,
+    onSuccess: (response) => {
+      console.log('ride created success', response);
+      setrideDetails(response.data.data.ride)
+      setmode('second')
+    },
+    onError: (error) => {
+      console.log('ride created error', error);
+    },
+  })
+
+  //cancel ride
+  const cancelRideMutation = useMutation({
+    mutationFn: cancelRide,
+    onSuccess: (response) => {
+      console.log('ride cancelled success', response);
+      navigation.navigate('Main')
+    },
+    onError: (error) => {
+      console.log('ride cancelled error', error);
+    },
+  })
+
+  const handleBookButton = () => {
+    if (selctedRide) {
+      const data = {
+        pickupLocation: {
+          address: pickupLocation?.description,
+          coordinates: [
+            pickupCoord?.latitude, pickupCoord?.longitude,
+          ]
+        },
+        destination: {
+          address:destinationLocation?.description,
+          coordinates: [
+         destinationCoord?.latitude, destinationCoord?.longitude,
+          ]
+        },
+        vehicleId: selctedRide.vehicleId,
+      }
+      CreateRideMutation.mutate(data)
+    }
+  }
+
+  const handleCancelButton = () => {
+    if (rideDetails) {
+      const data = {
+        rideId: rideDetails.id,
+      }
+      cancelRideMutation.mutateAsync(data)
+    }
+  }
 
   useEffect(() => {
-    logAllKeys()
+    if (pickupCoord && destinationCoord) {
+      const data = {
+        pickupCoords: pickupCoord,
+        destinationCoords: destinationCoord,
+      }
+      RidePriceMutation.mutateAsync(data)
+    }
+    
   }, [])
 
+  useEffect(() => {
+    setselctedRide(ridePrices[0])
+  }, [ridePrices])
 
-
-
+  useEffect(() => {
+    if (rideDetails) {
+      socket?.emit('bookRide', {
+        rideId: rideDetails.id,
+      })
+    }
+  }, [rideDetails])
+  
 
   return (
+    <SafeAreaView style={{flex: 1, backgroundColor: Black}}>
     <GestureHandlerRootView style={styles.container}>
       <TouchableOpacity
         style={{
@@ -69,7 +150,7 @@ export default function TripDetails() {
           left: 10,
           zIndex: 100,
         }}
-        onPress={() => navigation.goBack()}>
+        onPress={() => navigation.navigate('Main')}>
         <Ionicons name="chevron-back-circle" size={32} color={Gold} />
       </TouchableOpacity>
 
@@ -113,7 +194,53 @@ export default function TripDetails() {
               {/* <View style={{maxHeight: screenHeight * 0.25}}> */}
 
               <ScrollView style={{ maxHeight: '100%' }}>
-                <View
+                {ridePrices.map((item: any) => (
+                  <TouchableOpacity
+                    key={item.vehicleId}
+                    onPress={() => setselctedRide(item)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 10,
+                      borderColor: Gold,
+                      borderWidth: item.vehicleId === selctedRide?.vehicleId ? 3 : 1,
+                      borderRadius: 8,
+                      paddingVertical: item.vehicleId === selctedRide?.vehicleId ? 15 : 12,
+                      paddingHorizontal: 10,
+                      marginBottom: 10,
+                    }}>
+                    <View
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                      }}>
+                      <Ionicons name="bicycle" size={30} color="green" />
+                      <View>
+                        <Text
+                          style={{
+                            color: LightGold,
+                            fontSize: 14,
+                            fontWeight: '500',
+                          }}>
+                          {item.vehicleType === 'bike' ? 'Bike' : item.vehicleType === 'car' ? 'Car' : item.vehicleType === 'bikeWithExtraDriver' ? 'Bike + Driver' : item.vehicleType === 'carWithExtraDriver' ? 'Car + Driver' : ''}
+                        </Text>
+                        <Text style={{ color: Gray, fontSize: 12, flexShrink: 1, flexWrap: 'wrap' }}>
+                          {item.description.substr(0, 45)}..
+                        </Text>
+                      </View>
+                    </View>
+                    <Text
+                      style={{ color: LightGold, fontSize: 14, fontWeight: '700' }}>
+                      ${item.price}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+                {/* <View
                   style={{
                     display: 'flex',
                     flexDirection: 'row',
@@ -157,8 +284,8 @@ export default function TripDetails() {
                     style={{ color: LightGold, fontSize: 14, fontWeight: '700' }}>
                     $20
                   </Text>
-                </View>
-                <View
+                </View> */}
+                {/* <View
                   style={{
                     display: 'flex',
                     flexDirection: 'row',
@@ -247,7 +374,7 @@ export default function TripDetails() {
                     style={{ color: LightGold, fontSize: 14, fontWeight: '700' }}>
                     $40
                   </Text>
-                </View>
+                </View> */}
                 {/* <View
                   style={{
                     display: 'flex',
@@ -348,7 +475,7 @@ export default function TripDetails() {
                     padding: 10,
                     marginTop: 10,
                   }}
-                  onPress={() => setmode('second')}
+                  onPress={handleBookButton}
                 >
                   <Text
                     style={{
@@ -531,6 +658,7 @@ export default function TripDetails() {
         </BottomSheetView>
       </BottomSheet>
     </GestureHandlerRootView>
+    </SafeAreaView>
   );
 }
 
