@@ -20,6 +20,7 @@ export default function TripDetails() {
   const [mode, setmode] = useState('first');
   const [ridePrices, setridePrices] = useState([])
   const [rideDetails, setrideDetails] = useState<any>()
+  const [driverLocation, setdriverLocation] = useState<any>()
   const [selctedRide, setselctedRide] = useState<any>()
   const bottomSheetRef = useRef<BottomSheet>(null);
   const screenHeight = Dimensions.get('window').height;
@@ -138,6 +139,18 @@ export default function TripDetails() {
   //     })
   //   }
   // }, [rideDetails])
+
+  // ride accept socket
+  socket?.on('rideAccepted', (data: any) => {
+    console.log('ride accepted', data);
+    setmode('third')
+  })
+
+  // driver location socket
+  socket?.on('driverLocationUpdate', (data: any) => {
+    console.log('driver location', data);
+    setdriverLocation(data)
+  })
   
 
   return (
@@ -165,10 +178,14 @@ export default function TripDetails() {
           longitudeDelta: 0.01,
         }}
       >
-        <Marker coordinate={{ latitude: pickupLocation?.lat, longitude: pickupLocation?.lng }} />
-        <Marker coordinate={{
-          latitude: destinationLocation?.lat, longitude: destinationLocation?.lng
-        }} />
+        <Marker 
+          coordinate={{ latitude: pickupLocation?.lat, longitude: pickupLocation?.lng }}
+        ><Image source={require('../assets/logo/pickup.png')} style={{ width: 40, height: 40 }} /></Marker>
+        <Marker 
+          coordinate={{
+            latitude: destinationLocation?.lat, longitude: destinationLocation?.lng
+          }}
+        ><Image source={require('../assets/logo/destination.png')} style={{ width: 35, height: 35 }} /></Marker>
 
         <MapViewDirections
           origin={pickupCoord}
@@ -218,7 +235,7 @@ export default function TripDetails() {
                         justifyContent: 'space-between',
                         gap: 10,
                       }}>{item.vehicleType.includes('bike') ? 
-                      <Ionicons name="bicycle" size={30} color="green" /> : <Ionicons name='car-sport' size={30} color="green" /> }
+                      <Image source={require('../assets/logo/motorcycle.png')} style={{ width: 35, height: 35 }} /> : <Image source={require('../assets/logo/car.png')} style={{ width: 35, height: 35 }} /> }
                       <View>
                         <Text
                           style={{
