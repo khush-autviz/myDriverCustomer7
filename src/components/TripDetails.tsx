@@ -131,13 +131,13 @@ export default function TripDetails() {
     setselctedRide(ridePrices[0])
   }, [ridePrices])
 
-  useEffect(() => {
-    if (rideDetails) {
-      socket?.emit('bookRide', {
-        rideId: rideDetails.id,
-      })
-    }
-  }, [rideDetails])
+  // useEffect(() => {
+  //   if (rideDetails) {
+  //     socket?.emit('bookRide', {
+  //       rideId: rideDetails.id,
+  //     })
+  //   }
+  // }, [rideDetails])
   
 
   return (
@@ -174,8 +174,9 @@ export default function TripDetails() {
           origin={pickupCoord}
           destination={destinationCoord}
           apikey='AIzaSyBcKgyA7urR7gHyen79h40UlkvTJJoKc9I'
-          strokeColor="#fff"
+          strokeColor={Gold}
           strokeWidth={4}
+
         />
 
       </MapView>
@@ -191,8 +192,6 @@ export default function TripDetails() {
         <BottomSheetView style={styles.contentContainer}>
           {mode === 'first' && (
             <>
-              {/* <View style={{maxHeight: screenHeight * 0.25}}> */}
-
               <ScrollView style={{ maxHeight: '100%' }}>
                 {ridePrices.map((item: any) => (
                   <TouchableOpacity
@@ -218,8 +217,8 @@ export default function TripDetails() {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         gap: 10,
-                      }}>
-                      <Ionicons name="bicycle" size={30} color="green" />
+                      }}>{item.vehicleType.includes('bike') ? 
+                      <Ionicons name="bicycle" size={30} color="green" /> : <Ionicons name='car-sport' size={30} color="green" /> }
                       <View>
                         <Text
                           style={{
@@ -230,7 +229,7 @@ export default function TripDetails() {
                           {item.vehicleType === 'bike' ? 'Bike' : item.vehicleType === 'car' ? 'Car' : item.vehicleType === 'bikeWithExtraDriver' ? 'Bike + Driver' : item.vehicleType === 'carWithExtraDriver' ? 'Car + Driver' : ''}
                         </Text>
                         <Text style={{ color: Gray, fontSize: 12, flexShrink: 1, flexWrap: 'wrap' }}>
-                          {item.description.substr(0, 45)}..
+                          {item.description.substr(0, 30)}..
                         </Text>
                       </View>
                     </View>
@@ -240,179 +239,6 @@ export default function TripDetails() {
                     </Text>
                   </TouchableOpacity>
                 ))}
-                {/* <View
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 10,
-                    borderColor: Gold,
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    paddingVertical: 10,
-                    paddingHorizontal: 10,
-                    marginBottom: 10,
-                  }}>
-                  <View
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 20,
-                    }}>
-                    <Ionicons name="bicycle" size={30} color="green" />
-                    <View>
-                      <Text
-                        style={{
-                          color: LightGold,
-                          fontSize: 14,
-                          fontWeight: '500',
-                        }}>
-                        Bike
-                      </Text>
-                      <Text style={{ color: Gray, fontSize: 12 }}>
-                        Quick Bike Rides
-                      </Text>
-                      <Text style={{ color: Gray, fontSize: 12 }}>
-                        10 min away
-                      </Text>
-                    </View>
-                  </View>
-                  <Text
-                    style={{ color: LightGold, fontSize: 14, fontWeight: '700' }}>
-                    $20
-                  </Text>
-                </View> */}
-                {/* <View
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 10,
-                    borderColor: Gold,
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    paddingVertical: 10,
-                    paddingHorizontal: 10,
-                    marginBottom: 10,
-                  }}>
-                  <View
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 20,
-                    }}>
-                    <Ionicons name="car" size={30} color="green" />
-                    <View>
-                      <Text
-                        style={{
-                          color: LightGold,
-                          fontSize: 14,
-                          fontWeight: '500',
-                        }}>
-                        Cab Economy
-                      </Text>
-                      <Text style={{ color: Gray, fontSize: 12 }}>
-                        Quick Car Rides
-                      </Text>
-                      <Text style={{ color: Gray, fontSize: 12 }}>
-                        8 min away
-                      </Text>
-                    </View>
-                  </View>
-                  <Text
-                    style={{ color: LightGold, fontSize: 14, fontWeight: '700' }}>
-                    $30
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 10,
-                    borderColor: Gold,
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    paddingVertical: 10,
-                    paddingHorizontal: 10,
-                    marginBottom: 10,
-                  }}>
-                  <View
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 20,
-                    }}>
-                    <Ionicons name="car-sport" size={30} color="green" />
-                    <View>
-                      <Text
-                        style={{
-                          color: LightGold,
-                          fontSize: 14,
-                          fontWeight: '500',
-                        }}>
-                        Cab Premium
-                      </Text>
-                      <Text style={{ color: Gray, fontSize: 12 }}>
-                        Premium car Rides
-                      </Text>
-                      <Text style={{ color: Gray, fontSize: 12 }}>
-                        10 min away
-                      </Text>
-                    </View>
-                  </View>
-                  <Text
-                    style={{ color: LightGold, fontSize: 14, fontWeight: '700' }}>
-                    $40
-                  </Text>
-                </View> */}
-                {/* <View
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 10,
-                    borderColor: Gold,
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    paddingVertical: 10,
-                    paddingHorizontal: 10,
-                    marginBottom: 10,
-                  }}>
-                  <View
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 20,
-                    }}>
-                    <Ionicons name="car-sport" size={30} color="green" />
-                    <View>
-                      <Text
-                        style={{ color: LightGold, fontSize: 14, fontWeight: '500' }}>
-                        Cab Premium
-                      </Text>
-                      <Text style={{ color: Gray, fontSize: 12 }}>
-                        Premium car Rides
-                      </Text>
-                      <Text style={{ color: Gray, fontSize: 12 }}>10 min away</Text>
-                    </View>
-                  </View>
-                  <Text style={{ color: LightGold, fontSize: 14, fontWeight: '700' }}>
-                    $40
-                  </Text>
-                </View> */}
               </ScrollView>
               {/* </View> */}
               <View
@@ -422,7 +248,7 @@ export default function TripDetails() {
                   borderRadius: 8,
                   marginTop: 10,
                 }}>
-                <View
+                {/* <View
                   style={{
                     display: 'flex',
                     flexDirection: 'row',
@@ -467,7 +293,7 @@ export default function TripDetails() {
                       Offers
                     </Text>
                   </View>
-                </View>
+                </View> */}
                 <TouchableOpacity
                   style={{
                     backgroundColor: Gold,
@@ -476,6 +302,7 @@ export default function TripDetails() {
                     marginTop: 10,
                   }}
                   onPress={handleBookButton}
+                  disabled={CreateRideMutation.isPending}
                 >
                   <Text
                     style={{
@@ -534,17 +361,6 @@ export default function TripDetails() {
 
           {mode === 'third' && (
             <>
-              {/* <View style={{display: 'flex', flexDirection: 'row', gap: 30, alignItems: 'center', borderBottomColor: Gold, borderBottomWidth: 3, paddingBottom: 10}}>
-                <Ionicons name='bicycle' size={44} color="green" />
-                <View>
-                    <Text style={{color: Gold, fontSize: 14, fontWeight: 500}}>
-                    Looking for your
-                  </Text>
-                  <Text style={{color: Gold, fontSize: 16, fontWeight: '700'}}>
-                    Ride
-                  </Text>
-                </View>
-              </View> */}
               <View style={{ display: 'flex', flexDirection: 'row', gap: 10, alignItems: 'center', paddingBottom: 10 }}>
                 <TouchableOpacity onPress={() => setmode('second')}>
                   <Ionicons name='chevron-back' size={24} color={Gold} />

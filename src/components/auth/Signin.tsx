@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   signInButtonDisabled: {
-    backgroundColor: 'rgba(212, 175, 55, 0.5)',
+    // backgroundColor: 'rgba(212, 175, 55, 0.5)',
   },
   signInButtonText: {
     color: Black,

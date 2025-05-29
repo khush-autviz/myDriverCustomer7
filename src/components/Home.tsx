@@ -262,7 +262,7 @@
 
 
 
-import React from 'react';
+import React, { use } from 'react';
 import {
   View,
   StyleSheet,
@@ -283,9 +283,11 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useSocket } from '../context/SocketContext';
+import { useAuthStore } from '../store/authStore';
 
 export default function Home() {
   const navigation: any = useNavigation();
+  const {user} = useAuthStore()
 
   return (
     <>
@@ -295,7 +297,7 @@ export default function Home() {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Hello there,</Text>
-            <Text style={styles.userName}>Rider</Text>
+            <Text style={styles.userName}>{user?.firstName}</Text>
           </View>
           <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
             <View style={styles.profileIcon}>

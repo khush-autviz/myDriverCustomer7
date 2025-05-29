@@ -456,7 +456,7 @@ export default function Signup() {
             <TouchableOpacity
               style={[
                 styles.signupButton,
-                registerMutation.isPending && styles.signupButtonDisabled
+                // registerMutation.isPending && styles.signupButtonDisabled
               ]}
               onPress={handleSignup}
               disabled={registerMutation.isPending}>
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   signupButtonDisabled: {
-    backgroundColor: 'rgba(212, 175, 55, 0.5)',
+    // backgroundColor: 'rgba(212, 175, 55, 0.5)',
   },
   signupButtonText: {
     color: Black,
