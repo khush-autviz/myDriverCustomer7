@@ -25,6 +25,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { LocationProvider } from './src/context/LocationProvider';
 import { SocketProvider } from './src/context/SocketContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Toast } from './src/lib/Toast';
 
 
 const Tab = createBottomTabNavigator();
@@ -94,6 +95,7 @@ export default function App() {
                 {/* Main Tabs */}
                 <Stack.Screen name="Main" component={MainTabs} />
               </Stack.Navigator>
+              <Toast />
             </NavigationContainer>
             </SafeAreaView>
           </SocketProvider>

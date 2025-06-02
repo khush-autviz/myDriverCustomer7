@@ -17,6 +17,7 @@ import {Black, Gold, Gray, LightGold, White} from '../../constants/Color';
 import {useMutation} from '@tanstack/react-query';
 import {verifyOtp} from '../../constants/Api';
 import {useAuthStore} from '../../store/authStore';
+import { ShowToast } from '../../lib/Toast';
 
 const {width} = Dimensions.get('window');
 
@@ -156,6 +157,7 @@ export default function OtpScreen() {
     onError: (error: any) => {
       setIsLoading(false);
       console.log("verify otp mutation error", error);
+      ShowToast(error.response.data.message, {type: 'error'});
     }
   });
 

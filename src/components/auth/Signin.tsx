@@ -178,6 +178,7 @@ import {useMutation} from '@tanstack/react-query';
 import {authSignin} from '../../constants/Api';
 import PhoneInput from 'react-native-phone-number-input';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { ShowToast } from '../../lib/Toast';
 
 const {width} = Dimensions.get('window');
 
@@ -218,6 +219,7 @@ export default function Signin() {
     },
     onError: (error: any) => {
       console.log('auth mutation error', error);
+      ShowToast(error.response.data.message, {type: 'error'});
     },
   });
 
@@ -281,7 +283,7 @@ export default function Signin() {
                 ref={phoneInput}
                 defaultValue={value}
                 defaultCode="ZA"
-                layout="second"
+                layout="first"
                 onChangeText={(text) => {
                   setValue(text);
                   setIsValid(true);

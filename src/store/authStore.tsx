@@ -89,6 +89,7 @@ interface Coordinates {
 interface AuthStateData {
   user: User | null;
   token: Token | null;
+  rideId: string | null;
   pickupLocation: Coordinates | null;
   destinationLocation: Coordinates | null;
 }
@@ -97,6 +98,7 @@ interface AuthStateData {
 interface AuthState extends AuthStateData {
   setUser: (user: User) => void;
   setToken: (token: Token) => void;
+  setRideId: (rideId: string) => void;
   setPickupLocation: (location: Coordinates) => void;
   setDestinationLocation: (location: Coordinates) => void;
   clearLocations: () => void;
@@ -122,6 +124,7 @@ const persistConfig: AuthStorePersist = {
   partialize: (state) => ({
     user: state.user,
     token: state.token,
+    rideId: state.rideId,
     pickupLocation: state.pickupLocation,
     destinationLocation: state.destinationLocation,
   }),
@@ -132,10 +135,12 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
+      rideId: null,
       pickupLocation: null,
       destinationLocation: null,
       setUser: (user) => set({ user }),
       setToken: (token) => set({ token }),
+      setRideId: (rideId) => set({ rideId }),
       setPickupLocation: (location) => set({ pickupLocation: location }),
       setDestinationLocation: (location) => set({ destinationLocation: location }),
       clearLocations: () => set({ pickupLocation: null, destinationLocation: null }),
