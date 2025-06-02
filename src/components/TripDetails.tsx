@@ -20,6 +20,7 @@ export default function TripDetails() {
   const [mode, setmode] = useState('first');
   const [ridePrices, setridePrices] = useState([])
   const [rideDetails, setrideDetails] = useState<any>()
+  const [driverDetails, setdriverDetails] = useState<any>()
   const [driverLocation, setdriverLocation] = useState<any>()
   const [selctedRide, setselctedRide] = useState<any>()
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -132,25 +133,27 @@ export default function TripDetails() {
     setselctedRide(ridePrices[0])
   }, [ridePrices])
 
-  // useEffect(() => {
-  //   if (rideDetails) {
-  //     socket?.emit('bookRide', {
-  //       rideId: rideDetails.id,
-  //     })
-  //   }
-  // }, [rideDetails])
-
   // ride accept socket
   socket?.on('rideAccepted', (data: any) => {
     console.log('ride accepted', data);
+    setdriverDetails(data)
     setmode('third')
   })
 
+  // subscribing to driver lcoation
+  useEffect(() => {
+    if(driverDetails) {
+      socket?.emit('subscribeToDriverLocation', driverDetails.driverId)
+    }
+  }, [driverDetails])
+  
+  
   // driver location socket
   socket?.on('driverLocationUpdate', (data: any) => {
     console.log('driver location', data);
     setdriverLocation(data)
   })
+
   
 
   return (
