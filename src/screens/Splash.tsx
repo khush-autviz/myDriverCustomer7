@@ -4,9 +4,23 @@ import { View, Image, StyleSheet, StatusBar } from 'react-native';
 import { Black } from '../constants/Color';
 import { useAuthStore } from '../store/authStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQuery } from '@tanstack/react-query';
+import { getProfile } from '../constants/Api';
 
 const Splash = ({ navigation }: {navigation: any}) => {
+  // const {token, setRideId} = useAuthStore();
+
   const token = useAuthStore(state => state.token);
+  const setRideId = useAuthStore(state => state.setRideId);
+
+  // user details query
+  const {data: userDetails} = useQuery({
+    queryKey: ['userDetails'],
+    queryFn: getProfile,
+    enabled: !!token,
+  })
+
+  console.log("userDetails", userDetails)
   
   useEffect(() => {
     const checkAuthAndOnboarding = async () => {
@@ -17,7 +31,12 @@ const Splash = ({ navigation }: {navigation: any}) => {
       setTimeout(() => {
         if (token && token.access_token) {
           // If token exists, navigate to Main tabs
-          navigation.replace('Main');
+          if(userDetails?.data?.data?.currentRide){
+            setRideId(userDetails?.data?.data?.currentRide)
+            navigation.replace('TripDetails');
+          } else {
+            navigation.replace('Main');
+          }
         } else if (hasSeenOnboarding === 'true') {
           // If user has seen onboarding but no token, go to Signin
           navigation.replace('Signin');
@@ -29,7 +48,7 @@ const Splash = ({ navigation }: {navigation: any}) => {
     };
 
     checkAuthAndOnboarding();
-  }, [navigation, token]);
+  }, [navigation, token, userDetails]);
 
   return (
     <View style={styles.container}>

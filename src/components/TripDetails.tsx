@@ -1,4 +1,4 @@
-import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, FlatList, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
@@ -15,15 +15,18 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { calculateRidePrice, cancelRide, CreateRide, getRideDetails } from '../constants/Api';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ShowToast } from '../lib/Toast';
+import Modal from 'react-native-modal';
 
 export default function TripDetails() {
   const navigation: any = useNavigation();
-  const [mode, setmode] = useState('first');
+  const [mode, setmode] = useState('booking');
+  const [modalVisible, setmodalVisible] = useState(false);
   const [ridePrices, setridePrices] = useState([])
   // const [rideDetails, setrideDetails] = useState<any>()
   const [driverDetails, setdriverDetails] = useState<any>()
   const [driverLocation, setdriverLocation] = useState<any>()
   const [selctedRide, setselctedRide] = useState<any>()
+  const [rideOtp, setrideOtp] = useState<string>('')
   const bottomSheetRef = useRef<BottomSheet>(null);
   const screenHeight = Dimensions.get('window').height;
   const socket = useSocket()
@@ -33,6 +36,14 @@ export default function TripDetails() {
   const { location } = useContext(LocationContext)
 
   const snapPoints = useMemo(() => ['25%', '50%'], []);
+
+  const cancelReasons = [
+    'Rider not at pickup location',
+    'Rider not responding',
+    'Vehicle issue or breakdown',
+    'Personal emergency',
+    'Rider asked to cancel the trip',
+];
 
   // get ride details
   const {data: rideInfo} = useQuery({
@@ -89,9 +100,10 @@ export default function TripDetails() {
 
   //cancel ride
   const cancelRideMutation = useMutation({
-    mutationFn: cancelRide,
+    mutationFn: (data: any) => cancelRide(rideId, data),
     onSuccess: (response) => {
       console.log('ride cancelled success', response);
+      setRideId('')
       navigation.navigate('Main')
     },
     onError: (error) => {
@@ -121,15 +133,6 @@ export default function TripDetails() {
     }
   }
 
-  const handleCancelButton = () => {
-    // if (rideDetails) {
-    //   const data = {
-    //     rideId: rideDetails.id,
-    //   }
-    //   cancelRideMutation.mutateAsync(data)
-    // }
-  }
-
   useEffect(() => {
     if (pickupCoord && destinationCoord) {
       const data = {
@@ -149,13 +152,26 @@ export default function TripDetails() {
   socket?.on('rideAccepted', (data: any) => {
     console.log('ride accepted', data);
     setdriverDetails(data)
-    setmode('third')
+    setmode('accepted')
   })
 
   // ride arrived socket
   socket?.on('driverArrived', (data: any) => {
     console.log('driver arrived', data);
-    setmode('third')
+    // setmode('third')
+    setrideOtp(data.rideOtp)
+  })
+  
+  // ride otp verification socket
+  socket?.on('otpVerified', (data: any) => {
+    console.log('ride otp verification', data);
+    setmode('otp_verified')
+  })
+
+  // ride completed socket
+  socket?.on('rideCompleted', (data: any) => {
+    console.log('ride completed', data);
+    navigation.replace('Ratings')
   })
 
   // subscribing to driver lcoation
@@ -172,12 +188,25 @@ export default function TripDetails() {
     setdriverLocation(data)
   })
 
+  // ride cancelled socket
+  socket?.on('rideCancelled', (data: any) => {
+    console.log('ride cancelled', data);
+    setmodalVisible(false)
+    navigation.navigate('Main')
+  })
+
+
+  useEffect(() => {
+    if(rideInfo?.data?.data?.ride?.status && rideInfo?.data?.data?.ride?.status !== 'cancelled') {
+      setmode(rideInfo?.data?.data?.ride?.status)
+    }
+  }, [rideInfo])
 
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Black }}>
       <GestureHandlerRootView style={styles.container}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={{
             position: 'absolute',
             top: 20,
@@ -186,7 +215,69 @@ export default function TripDetails() {
           }}
           onPress={() => navigation.navigate('Main')}>
           <Ionicons name="chevron-back-circle" size={32} color={Gold} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
+
+
+        {/* Cancel Ride Modal */}
+        <Modal
+                isVisible={modalVisible}
+                animationIn="slideInUp"
+                animationOut="slideOutDown"
+                backdropOpacity={0.7}
+                onBackdropPress={() => setmodalVisible(false)}
+                style={styles.modal}
+                statusBarTranslucent
+                useNativeDriver
+                hideModalContentWhileAnimating
+            >
+                <View style={styles.modalContainer}>
+                    {/* Modal Header */}
+                    <View style={styles.modalHeader}>
+                        {/* <View style={styles.modalIndicator} /> */}
+                        <Text style={styles.modalTitle}>Cancel Ride</Text>
+                    </View>
+
+                    {/* Modal Content */}
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalDescription}>
+                            Please select a reason for cancellation:
+                        </Text>
+
+                        <FlatList
+                            data={cancelReasons}
+                            keyExtractor={(item) => item}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={styles.reasonButton}
+                                    activeOpacity={0.7}
+                                    onPress={() => {
+                                        cancelRideMutation.mutate({
+                                            id: rideId,
+                                            payload: { reason: item }
+                                        });
+                                    }}
+                                >
+                                    <Text style={styles.reasonText}>{item}</Text>
+                                    <Ionicons name="chevron-forward" size={20} color={Gold} />
+                                </TouchableOpacity>
+                            )}
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={styles.reasonsList}
+                        />
+                    </View>
+
+                    {/* Modal Footer */}
+                    <View style={styles.modalFooter}>
+                        <TouchableOpacity
+                            style={styles.cancelButton}
+                            activeOpacity={0.8}
+                            onPress={() => setmodalVisible(false)}
+                        >
+                            <Text style={styles.cancelButtonText}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
 
 
         <MapView
@@ -228,7 +319,7 @@ export default function TripDetails() {
           handleIndicatorStyle={{ backgroundColor: Gold }}
           backgroundStyle={{ backgroundColor: Black }}>
           <BottomSheetView style={styles.contentContainer}>
-            {mode === 'first' && (
+            {mode === 'booking' && (
               <>
                 <ScrollView style={{ maxHeight: '100%' }}>
                   {ridePrices.map((item: any) => (
@@ -290,7 +381,7 @@ export default function TripDetails() {
                     style={{
                       backgroundColor: Gold,
                       borderRadius: 8,
-                      padding: 10,
+                      padding: 15,
                       marginTop: 10,
                     }}
                     onPress={handleBookButton}
@@ -309,7 +400,7 @@ export default function TripDetails() {
                 </View>
               </>
             )}
-            {mode === 'second' && (
+            {mode === 'searchingDriver' && (
               <>
                 <View
                   style={{
@@ -331,12 +422,12 @@ export default function TripDetails() {
                   </View>
                   <TouchableOpacity
                     style={{
-                      backgroundColor: Gold,
-                      borderRadius: 16,
+                      backgroundColor: '#8B3A3A',
+                      borderRadius: 8,
                       padding: 10,
                     }}
-                    onPress={() => setmode('third')}>
-                    <Text>Trip Details</Text>
+                    onPress={() => setmodalVisible(true)}>
+                    <Text style={{ color: White, fontSize: 14, fontWeight: '700' }}>Cancel Ride</Text>
                   </TouchableOpacity>
                 </View>
                 <Image
@@ -351,117 +442,229 @@ export default function TripDetails() {
               </>
             )}
 
-            {mode === 'third' && (
-              <>
-                <View style={{ display: 'flex', flexDirection: 'row', gap: 10, alignItems: 'center', paddingBottom: 10 }}>
+            {(mode === 'accepted' || mode === 'arrived') && (
+              <View style={{ flex: 1 }}>
+                {/* <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
                   <TouchableOpacity onPress={() => setmode('second')}>
                     <Ionicons name='chevron-back' size={24} color={Gold} />
-
                   </TouchableOpacity>
-                  <Text style={{ color: Gold, fontSize: 18, fontWeight: 700 }}>
-                    Location Details
+                  <Text style={{ color: Gold, fontSize: 24, fontWeight: '600', marginLeft: 10 }}>
+                    Trip Details
                   </Text>
-                </View>
-                <View
-                  style={{
+                </View> */}
+
+                <ScrollView 
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{ paddingBottom: 20 }}
+                >
+                  {/* Driver Details Card */}
+                  <View style={{
                     borderColor: Gold,
-                    borderWidth: 3,
-                    padding: 10,
-                    marginTop: 10,
-                    borderRadius: 10,
-                    gap: 10,
+                    borderWidth: 1,
+                    padding: 16,
+                    borderRadius: 16,
+                    marginBottom: 15,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)'
                   }}>
-                  <View
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      gap: 15,
-                      alignItems: 'center',
-                    }}>
-                    <View style={{ gap: 10 }}>
-                      <Ionicons name="location" size={20} color="green" />
-                    </View>
-                    <View>
-                      <View>
-                        {/* <Text
-                        style={{ color: Gold, fontSize: 14, fontWeight: 700 }}>
-                        FZ5
-                      </Text> */}
-                        <Text style={{ color: LightGold, fontSize: 14 }}>
-                          {rideInfo?.data?.data?.ride?.pickupLocation?.address}
-                        </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, justifyContent: 'space-between' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ 
+                        width: 24, 
+                        height: 24, 
+                        borderRadius: 24, 
+                        backgroundColor: 'rgba(255, 215, 0, 0.2)',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 12
+                      }}>
+                        <Ionicons name="person" size={20} color={Gold} />
                       </View>
+                      {/* <View> */}
+                        <Text style={{ color: Gold, fontSize: 16, fontWeight: '600' }}>
+                          {rideInfo?.data?.data?.ride?.driver?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName}
+                        </Text>
+                        </View>
+                        {rideOtp && (
+                        <View style={{ backgroundColor: 'rgba(255, 107, 107, 0.4)', padding: 5, borderRadius: 10, marginLeft: 20,  }}>
+                        <Text style={{ color: LightGold, fontSize: 16, fontWeight: '500' }}>
+                          OTP:  {rideOtp}
+                        </Text>
+                        </View>
+                        )}
+                      {/* </View>/ */}
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                      <Ionicons name="car" size={20} color={Gold} style={{ marginRight: 8 }} />
+                      <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
+                        {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model} • {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.licensePlate}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                    <Ionicons name="call" size={20} color={Gold} style={{ marginRight: 8 }} />
+                    <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
+                      {rideInfo?.data?.data?.ride?.driver?.phone}
+                    </Text>
+                  </View>
+                  </View>
+
+                  {/* Ride Status */}
+                  {/* <TouchableOpacity style={{
+                    backgroundColor: Gold,
+                    padding: 16,
+                    borderRadius: 8,
+                    marginBottom: 15,
+                    alignItems: 'center'
+                  }}>
+                    <Text style={{ color: Black, fontSize: 18, fontWeight: '600' }}>
+                      {rideInfo?.data?.data?.ride?.status?.toUpperCase()}
+                    </Text>
+                  </TouchableOpacity> */}
+
+                  {/* Location Details */}
+                  <View style={{
+                    borderColor: Gold,
+                    borderWidth: 1,
+                    padding: 16,
+                    borderRadius: 16,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    marginBottom: 15
+                  }}>
+                    {/* <Text style={{ color: Gold, fontSize: 16, marginBottom: 12 }}>PICKUP</Text> */}
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
+                      <View style={{ marginRight: 12, marginTop: 4 }}>
+                        <Ionicons name="location" size={20} color="green" />
+                      </View>
+                      <Text style={{ color: LightGold, fontSize: 14, flex: 1, lineHeight: 22 }}>
+                        {rideInfo?.data?.data?.ride?.pickupLocation?.address}
+                      </Text>
+                    </View>
+
+                    {/* <Text style={{ color: Gold, fontSize: 18, marginBottom: 12 }}>DROP-OFF</Text> */}
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                      <View style={{ marginRight: 12, marginTop: 4 }}>
+                        <Ionicons name="location" size={20} color="red" />
+                      </View>
+                      <Text style={{ color: LightGold, fontSize: 14, flex: 1, lineHeight: 22 }}>
+                        {rideInfo?.data?.data?.ride?.destination?.address}
+                      </Text>
                     </View>
                   </View>
-                  <View
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      gap: 15,
-                      alignItems: 'center',
-                    }}>
-                    <View style={{ gap: 10 }}>
-                      <Ionicons name="location" size={20} color="red" />
-                    </View>
-                    <View>
-                      <View>
-                        {/* <Text
-                        style={{ color: Gold, fontSize: 14, fontWeight: 700 }}>
-                        FZ5
-                      </Text> */}
-                        <Text style={{ color: LightGold, fontSize: 14 }}>
-                          {rideInfo?.data?.data?.ride?.destination?.address}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-                <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
-                  <Text style={{ color: Gold, fontSize: 18, fontWeight: 700 }}>
-                    Total
-                  </Text>
-                  <Text style={{ color: Gold, fontSize: 18, fontWeight: 700 }}>
-                    ${rideInfo?.data?.data?.ride?.fare}
-                  </Text>
-                </View>
-                <View style={{ borderBottomColor: Gold, borderWidth: 3, borderRadius: 10, marginTop: 10 }}></View>
-                {/* <TouchableOpacity
-                style={{
-                  backgroundColor: Gold,
-                  borderRadius: 8,
-                  padding: 10,
-                  marginTop: 10,
-                }}>
-                <Text
-                  style={{
-                    color: White,
-                    fontSize: 14,
-                    fontWeight: '700',
-                    textAlign: 'center',
-                  }}>
-                  Book Now
-                </Text>
-              </TouchableOpacity> */}
+                </ScrollView>
+
+                {/* Cancel Button */}
                 <TouchableOpacity
                   style={{
                     backgroundColor: '#8B3A3A',
                     borderRadius: 8,
-                    padding: 10,
-                    marginTop: 10,
+                    padding: 16,
+                    marginTop: 'auto',
+                    marginBottom: 20
                   }}
-                  onPress={() => setmode('first')}
+                  onPress={() => setmodalVisible(true)}
                 >
-                  <Text
-                    style={{
-                      color: White,
-                      fontSize: 14,
-                      fontWeight: '700',
-                      textAlign: 'center',
-                    }}>
+                  <Text style={{
+                    color: White,
+                    fontSize: 18,
+                    fontWeight: '600',
+                    textAlign: 'center',
+                  }}>
                     Cancel Ride
                   </Text>
                 </TouchableOpacity>
-              </>
+              </View>
+            )}
+            {mode === 'otp_verified' || mode === 'in_progress' && (
+              <View style={{ flex: 1 }}>
+              {/* <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+                <TouchableOpacity onPress={() => setmode('second')}>
+                  <Ionicons name='chevron-back' size={24} color={Gold} />
+                </TouchableOpacity>
+                <Text style={{ color: Gold, fontSize: 24, fontWeight: '600', marginLeft: 10 }}>
+                  Trip Details
+                </Text>
+              </View> */}
+
+              <ScrollView 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 20 }}
+              >
+                {/* Driver Details Card */}
+                <View style={{
+                  borderColor: Gold,
+                  borderWidth: 1,
+                  padding: 16,
+                  borderRadius: 16,
+                  marginBottom: 15,
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)'
+                }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ 
+                      width: 24, 
+                      height: 24, 
+                      borderRadius: 24, 
+                      backgroundColor: 'rgba(255, 215, 0, 0.2)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 12
+                    }}>
+                      <Ionicons name="person" size={20} color={Gold} />
+                    </View>
+                    {/* <View> */}
+                      <Text style={{ color: Gold, fontSize: 16, fontWeight: '600' }}>
+                        {rideInfo?.data?.data?.ride?.driver?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName}
+                      </Text>
+                      </View>
+                    {/* </View>/ */}
+                  </View>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                    <Ionicons name="car" size={20} color={Gold} style={{ marginRight: 8 }} />
+                    <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
+                      {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model} • {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.licensePlate}
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <Ionicons name="call" size={20} color={Gold} style={{ marginRight: 8 }} />
+                  <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
+                    {rideInfo?.data?.data?.ride?.driver?.phone}
+                  </Text>
+                </View>
+                </View>
+
+                {/* Location Details */}
+                <View style={{
+                  borderColor: Gold,
+                  borderWidth: 1,
+                  padding: 16,
+                  borderRadius: 16,
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                  marginBottom: 15
+                }}>
+                  {/* <Text style={{ color: Gold, fontSize: 16, marginBottom: 12 }}>PICKUP</Text> */}
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
+                    <View style={{ marginRight: 12, marginTop: 4 }}>
+                      <Ionicons name="location" size={20} color="green" />
+                    </View>
+                    <Text style={{ color: LightGold, fontSize: 14, flex: 1, lineHeight: 22 }}>
+                      {rideInfo?.data?.data?.ride?.pickupLocation?.address}
+                    </Text>
+                  </View>
+
+                  {/* <Text style={{ color: Gold, fontSize: 18, marginBottom: 12 }}>DROP-OFF</Text> */}
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                    <View style={{ marginRight: 12, marginTop: 4 }}>
+                      <Ionicons name="location" size={20} color="red" />
+                    </View>
+                    <Text style={{ color: LightGold, fontSize: 14, flex: 1, lineHeight: 22 }}>
+                      {rideInfo?.data?.data?.ride?.destination?.address}
+                    </Text>
+                  </View>
+                </View>
+              </ScrollView>
+
+            </View>
             )}
           </BottomSheetView>
         </BottomSheet>
@@ -484,4 +687,172 @@ const styles = StyleSheet.create({
   map: {
     ...StyleSheet.absoluteFillObject,
   },
+      // Modal Styles
+      modal: {
+        margin: 0,
+        justifyContent: 'flex-end',
+    },
+    modalContainer: {
+        backgroundColor: Black,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        paddingBottom: Platform.OS === 'ios' ? 34 : 24, // Extra padding for iOS devices with home indicator
+        overflow: 'hidden',
+    },
+    modalHeader: {
+        alignItems: 'center',
+        paddingTop: 12,
+        paddingBottom: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    modalIndicator: {
+        width: 40,
+        height: 5,
+        backgroundColor: Gray,
+        borderRadius: 3,
+        marginBottom: 12,
+    },
+    modalTitle: {
+        color: Gold,
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    modalContent: {
+        paddingHorizontal: 20,
+        paddingTop: 16,
+    },
+    modalDescription: {
+        color: White,
+        fontSize: 14,
+        marginBottom: 16,
+        opacity: 0.9,
+    },
+    reasonsList: {
+        paddingBottom: 8,
+    },
+    reasonButton: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 10,
+    },
+    reasonText: {
+        color: White,
+        fontSize: 16,
+        fontWeight: '500',
+    },
+    modalFooter: {
+        paddingHorizontal: 20,
+        paddingTop: 16,
+    },
+    cancelButton: {
+        backgroundColor: '#8B3A3A',
+        borderRadius: 12,
+        padding: 16,
+        alignItems: 'center',
+        marginTop: 10
+    },
+    cancelButtonText: {
+        color: White,
+        fontSize: 16,
+        fontWeight: '700',
+    },
+
+
+    // OTP Section Styles
+    otpContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    otpInput: {
+        borderColor: Gold,
+        borderWidth: 2,
+        borderRadius: 10,
+        paddingHorizontal: 15,
+        height: 50,
+        width: '60%',
+        color: White,
+        fontSize: 16,
+    },
+    verifyButton: {
+        backgroundColor: Gold,
+        borderRadius: 10,
+        padding: 12,
+        width: '35%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        elevation: 2,
+        shadowColor: Gold,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+    },
+    verifyButtonText: {
+        color: White,
+        fontSize: 16,
+        fontWeight: '700',
+        textAlign: 'center',
+    },
+
+    // Trip Details Card Styles
+    tripDetailsCard: {
+        borderColor: Gold,
+        borderWidth: 2,
+        padding: 8,
+        marginTop: 20,
+        borderRadius: 12,
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    },
+    locationRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 5,
+    },
+    iconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
+    },
+    locationTitle: {
+        color: Gold,
+        fontSize: 16,
+        fontWeight: '700',
+        marginBottom: 4,
+    },
+    locationSubtitle: {
+        color: LightGold,
+        fontSize: 14,
+        flexWrap: 'wrap',
+        width: '55%',
+        // marginRight: 10,
+    },
+
+    // Cancel Button Styles
+    cancelRideButton: {
+        backgroundColor: '#8B3A3A',
+        borderRadius: 10,
+        padding: 15,
+        marginTop: 20,
+        alignItems: 'center',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+    },
+    cancelRideButtonText: {
+        color: White,
+        fontSize: 16,
+        fontWeight: '700',
+    },
 });

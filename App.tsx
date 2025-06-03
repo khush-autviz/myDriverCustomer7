@@ -26,6 +26,7 @@ import { LocationProvider } from './src/context/LocationProvider';
 import { SocketProvider } from './src/context/SocketContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Toast } from './src/lib/Toast';
+import Ratings from './src/components/Ratings';
 
 
 const Tab = createBottomTabNavigator();
@@ -91,6 +92,7 @@ export default function App() {
                 <Stack.Screen name="Location" component={Location} />
                 <Stack.Screen name="TripDetails" component={TripDetails} />
                 <Stack.Screen name="Profile" component={Profile} />
+                <Stack.Screen name="Ratings" component={Ratings} />
                 
                 {/* Main Tabs */}
                 <Stack.Screen name="Main" component={MainTabs} />

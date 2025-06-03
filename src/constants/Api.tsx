@@ -55,7 +55,13 @@ export const getRideDetails = async (rideId: any) => {
 }
 
 //ride cancel
-export const cancelRide = async (data: any) => {
-    const response = await axios.patch('/ride-status/customer/cancel/{rideId}', data)
+export const cancelRide = async (rideId: any, data: any) => {
+    const response = await axios.put(`/ride-status/customer/cancel/${rideId}`, data)
+    return response
+}
+
+// rating ride
+export const ratingRide = async (data: any, rideId: any) => {
+    const response = await axios.post(`/rating/ride/${rideId}`, data)
     return response
 }

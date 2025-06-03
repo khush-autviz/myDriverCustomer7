@@ -1,28 +1,52 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from 'react-native'
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Black, DarkGray, Gold, Gray, LightGold, White } from '../constants/Color'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { useNavigation } from '@react-navigation/native'
 import { TextInput } from 'react-native-gesture-handler'
+import { ratingRide } from '../constants/Api'
+import { useAuthStore } from '../store/authStore'
+import { useMutation } from '@tanstack/react-query'
+import { ShowToast } from '../lib/Toast'
+import Loader from './Loader'
 
 export default function Ratings({ route }: { route: any }) {
   const navigation: any = useNavigation();
   const [rating, setRating] = useState(0);
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState('')
+  const { rideId} = useAuthStore()
   
-  // Get ride details from route params if needed
-  // const { rideId } = route.params;
+  // ratigns mutation
+  const ratingsMutation = useMutation({
+    mutationFn: (data: any) => ratingRide(data, rideId),
+    onSuccess: (response) => {
+      console.log("ratingsMutation success", response);
+      navigation.navigate('Main')
+    },
+    onError: (error: any) => {
+      console.log(error)
+      ShowToast(error.response.data.message, {type: 'error'})
+    }
+  })
 
   const handleRatingSubmit = () => {
-    // Submit rating logic here
-    // API call to save rating
-    navigation.goBack();
+    if(rating === 0 || feedback.trim() === '') {
+      ShowToast('Please fill all the fields', {type: 'error'})
+      return
+    }
+    ratingsMutation.mutate({rating, review: feedback})
   }
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* {ratingsMutation.isPending && (
+        <ActivityIndicator size="large" color={Gold} />
+      )} */}
       <View style={styles.header}>
+        {ratingsMutation.isPending && (
+         <Loader />
+        )}
         {/* <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Gold} />
         </TouchableOpacity> */}
@@ -64,6 +88,7 @@ export default function Ratings({ route }: { route: any }) {
       <TouchableOpacity 
         style={styles.submitButton}
         onPress={handleRatingSubmit}
+        disabled={ratingsMutation.isPending}
       >
         <Text style={styles.submitButtonText}>Submit Rating</Text>
       </TouchableOpacity>
