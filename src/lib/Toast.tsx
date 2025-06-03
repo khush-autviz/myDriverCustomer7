@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   Text,
   Animated,
@@ -33,35 +33,52 @@ export const Toast = () => {
   });
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
+
+  const hideToast = useCallback(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setToastConfig(prev => ({ ...prev, visible: false }));
+    });
+  }, [fadeAnim]);
+
+  const showToast = useCallback(({ message, type }: { message: string; type: ToastType }) => {
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    setToastConfig({
+      message,
+      type,
+      visible: true,
+    });
+
+    // Show animation
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+
+    // Set timeout to hide
+    timeoutRef.current = setTimeout(() => {
+      hideToast();
+    }, DURATION);
+  }, [fadeAnim, hideToast]);
 
   useEffect(() => {
-    const showToastMessage = ({ message, type }: { message: string; type: ToastType }) => {
-      setToastConfig({
-        message,
-        type,
-        visible: true,
-      });
-
-      Animated.sequence([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.delay(DURATION),
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setToastConfig(prev => ({ ...prev, visible: false }));
-      });
+    const subscription = DeviceEventEmitter.addListener(TOAST_EVENT, showToast);
+    return () => {
+      subscription.remove();
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-
-    const subscription = DeviceEventEmitter.addListener(TOAST_EVENT, showToastMessage);
-    return () => subscription.remove();
-  }, []);
+  }, [showToast]);
 
   if (!toastConfig.visible) return null;
 

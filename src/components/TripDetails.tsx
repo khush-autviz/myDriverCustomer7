@@ -26,12 +26,14 @@ export default function TripDetails() {
   const [driverDetails, setdriverDetails] = useState<any>()
   const [driverLocation, setdriverLocation] = useState<any>()
   const [selctedRide, setselctedRide] = useState<any>()
-  const [rideOtp, setrideOtp] = useState<string>('')
+  const [rideOtp, setrideOtp] = useState<string>()
   const bottomSheetRef = useRef<BottomSheet>(null);
   const screenHeight = Dimensions.get('window').height;
   const socket = useSocket()
 
-  const { pickupLocation, destinationLocation, setRideId, rideId } = useAuthStore();
+  const { pickupLocation, destinationLocation} = useAuthStore();
+  const rideId = useAuthStore(state => state.rideId)
+  const setRideId = useAuthStore(state => state.setRideId)
 
   const { location } = useContext(LocationContext)
 
@@ -46,7 +48,7 @@ export default function TripDetails() {
 ];
 
   // get ride details
-  const {data: rideInfo} = useQuery({
+  const {data: rideInfo, refetch} = useQuery({
     queryKey: ['rideDetails'],
     queryFn: () => getRideDetails(rideId),
     enabled: !!rideId,
@@ -90,7 +92,7 @@ export default function TripDetails() {
       console.log('ride created success', response);
       setRideId(response.data.data.ride.id)
       // setrideDetails(response.data.data.ride)
-      setmode('second')
+      setmode('searchingDriver')
     },
     onError: (error) => {
       console.log('ride created error', error);
@@ -151,6 +153,7 @@ export default function TripDetails() {
   // ride accept socket
   socket?.on('rideAccepted', (data: any) => {
     console.log('ride accepted', data);
+    refetch()
     setdriverDetails(data)
     setmode('accepted')
   })
@@ -192,13 +195,18 @@ export default function TripDetails() {
   socket?.on('rideCancelled', (data: any) => {
     console.log('ride cancelled', data);
     setmodalVisible(false)
-    navigation.navigate('Main')
+    setRideId('')
+    ShowToast("Driver cancelled the ride", { type: 'error' });
+    setmode('booking')
   })
 
 
   useEffect(() => {
     if(rideInfo?.data?.data?.ride?.status && rideInfo?.data?.data?.ride?.status !== 'cancelled') {
       setmode(rideInfo?.data?.data?.ride?.status)
+    }
+    if (rideInfo?.data?.data?.ride?.rideOtp) {
+      setrideOtp(rideInfo?.data?.data?.ride?.rideOtp)
     }
   }, [rideInfo])
 
