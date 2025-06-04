@@ -89,7 +89,7 @@ interface Coordinates {
 interface AuthStateData {
   user: User | null;
   token: Token | null;
-  rideId: string | null;
+  rideId: any | null;
   pickupLocation: Coordinates | null;
   destinationLocation: Coordinates | null;
 }
@@ -98,7 +98,7 @@ interface AuthStateData {
 interface AuthState extends AuthStateData {
   setUser: (user: User) => void;
   setToken: (token: Token) => void;
-  setRideId: (rideId: string) => void;
+  setRideId: (rideId: any) => void;
   setPickupLocation: (location: Coordinates) => void;
   setDestinationLocation: (location: Coordinates) => void;
   clearLocations: () => void;

@@ -50,7 +50,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Black, Gray, Gold, LightGold, White, DarkGray } from '../constants/Color'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { useQuery } from '@tanstack/react-query'
-import { getRide } from '../constants/Api'
+import { getRideHistory } from '../constants/Api'
 import { useNavigation } from '@react-navigation/native'
 
 export default function Activity() {
@@ -58,18 +58,19 @@ export default function Activity() {
   const [data, setData] = useState([]);
 
   // fetches all rides
-  const rideDetails = useQuery({
-    queryKey: ['ride-details'],
-    queryFn: getRide,
+  const {data: rideHistory, isLoading} = useQuery({
+    queryKey: ['ride-history'],
+    queryFn: getRideHistory,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
   });
 
   useEffect(() => {
-    if (rideDetails.data?.data?.rides) {
-      setData(rideDetails.data.data.rides);
+    if (rideHistory?.data?.data?.rides) {
+      console.log("ride details",rideHistory.data.data.rides);
+      setData(rideHistory.data.data.rides);
     }
-  }, [rideDetails.data]);
+  }, [rideHistory]);
 
   // Calculate total rides and earnings
   const totalRides = data.length;
@@ -77,17 +78,17 @@ export default function Activity() {
     sum + (parseFloat(ride.price) || 0), 0).toFixed(2);
 
   const renderRideItem = ({ item }: any) => (
-    <TouchableOpacity 
+    <View 
       style={styles.activityItem}
-      onPress={() => navigation.navigate('TripDetails', { rideId: item.id })}
+      // onPress={() => navigation.navigate('TripDetails', { rideId: item.id })}
     >
-      <View style={styles.activityIconContainer}>
+      {/* <View style={styles.activityIconContainer}>
         <Ionicons name="car" size={20} color={Gold} />
-      </View>
+      </View> */}
       <View style={styles.activityContent}>
         <Text style={styles.activityTitle}>
           {item.destination?.address ? 
-            `Trip to ${item.destination.address.split(',')[0]}` : 
+            `Trip to ${item.destination.address}` : 
             'Ride'}
         </Text>
         <Text style={styles.activityDate}>
@@ -102,7 +103,7 @@ export default function Activity() {
         </Text>
       </View>
       <View style={styles.activityAmount}>
-        <Text style={styles.amountText}>${item.price || '0.00'}</Text>
+        <Text style={styles.amountText}>${item.fare || '0.00'}</Text>
         <View style={styles.statusContainer}>
           <View style={[styles.statusDot, { 
             backgroundColor: item.status === 'completed' ? '#4CAF50' : Gold 
@@ -110,7 +111,7 @@ export default function Activity() {
           <Text style={styles.statusText}>{item.status || 'Unknown'}</Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   // Empty state component
@@ -143,7 +144,7 @@ export default function Activity() {
       </View>
 
       {/* Activity Summary Card */}
-      <View style={styles.summaryCard}>
+      {/* <View style={styles.summaryCard}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>Total Rides</Text>
           <Text style={styles.summaryValue}>{totalRides}</Text>
@@ -153,10 +154,10 @@ export default function Activity() {
           <Text style={styles.summaryLabel}>Total Spent</Text>
           <Text style={styles.summaryValue}>${totalEarnings}</Text>
         </View>
-      </View>
+      </View> */}
 
       {/* Activity List */}
-      {rideDetails.isLoading ? (
+      {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Gold} />
           <Text style={styles.loadingText}>Loading your rides...</Text>
@@ -255,7 +256,7 @@ const styles = StyleSheet.create({
   },
   activityTitle: {
     color: White,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,
   },

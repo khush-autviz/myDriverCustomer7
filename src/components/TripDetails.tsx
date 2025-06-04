@@ -31,9 +31,8 @@ export default function TripDetails() {
   const screenHeight = Dimensions.get('window').height;
   const socket = useSocket()
 
-  const { pickupLocation, destinationLocation} = useAuthStore();
+  const { pickupLocation, destinationLocation, setRideId } = useAuthStore();
   const rideId = useAuthStore(state => state.rideId)
-  const setRideId = useAuthStore(state => state.setRideId)
 
   const { location } = useContext(LocationContext)
 
@@ -45,17 +44,21 @@ export default function TripDetails() {
     'Vehicle issue or breakdown',
     'Personal emergency',
     'Rider asked to cancel the trip',
-];
+  ];
 
   // get ride details
-  const {data: rideInfo, refetch} = useQuery({
-    queryKey: ['rideDetails'],
+  const { data: rideInfo, refetch } = useQuery({
+    queryKey: ['rideInfo', rideId],
     queryFn: () => getRideDetails(rideId),
     enabled: !!rideId,
+    staleTime: 0,
   })
 
+  console.log(rideId, 'rideId new check');
+
+
   console.log(rideInfo, 'rideInfo');
-  
+
 
   // location details
   const pickupCoord =
@@ -102,10 +105,11 @@ export default function TripDetails() {
 
   //cancel ride
   const cancelRideMutation = useMutation({
-    mutationFn: (data: any) => cancelRide(rideId, data),
+    mutationFn: (data: any) => cancelRide(String(rideId), data),
     onSuccess: (response) => {
+      setmodalVisible(false)
       console.log('ride cancelled success', response);
-      setRideId('')
+      setRideId(null)
       navigation.navigate('Main')
     },
     onError: (error) => {
@@ -150,65 +154,99 @@ export default function TripDetails() {
     setselctedRide(ridePrices[0])
   }, [ridePrices])
 
-  // ride accept socket
-  socket?.on('rideAccepted', (data: any) => {
+  // Socket event handlers
+  const handleRideAccepted = useCallback((data: any) => {
     console.log('ride accepted', data);
-    refetch()
-    setdriverDetails(data)
-    setmode('accepted')
-  })
+    refetch();
+    setdriverDetails(data);
+    setmode('accepted');
+  }, [refetch]);
 
-  // ride arrived socket
-  socket?.on('driverArrived', (data: any) => {
+  const handleDriverArrived = useCallback((data: any) => {
     console.log('driver arrived', data);
-    // setmode('third')
-    setrideOtp(data.rideOtp)
-  })
-  
-  // ride otp verification socket
-  socket?.on('otpVerified', (data: any) => {
+    setrideOtp(data.rideOtp);
+  }, []);
+
+  const handleOtpVerified = useCallback((data: any) => {
     console.log('ride otp verification', data);
-    setmode('otp_verified')
-  })
+    setmode('otp_verified');
+  }, []);
 
-  // ride completed socket
-  socket?.on('rideCompleted', (data: any) => {
+  const handleRideCompleted = useCallback((data: any) => {
     console.log('ride completed', data);
-    navigation.replace('Ratings')
-  })
+    navigation.replace('Ratings');
+  }, [navigation]);
 
-  // subscribing to driver lcoation
-  useEffect(() => {
-    if (driverDetails) {
-      socket?.emit('subscribeToDriverLocation', driverDetails.driverId)
-    }
-  }, [driverDetails])
-
-
-  // driver location socket
-  socket?.on('driverLocationUpdate', (data: any) => {
+  const handleDriverLocation = useCallback((data: any) => {
     console.log('driver location', data);
-    setdriverLocation(data)
-  })
+    setdriverLocation(data);
+  }, []);
 
-  // ride cancelled socket
-  socket?.on('rideCancelled', (data: any) => {
+  const handleRideCancelled = useCallback((data: any) => {
     console.log('ride cancelled', data);
-    setmodalVisible(false)
-    setRideId('')
+    setmodalVisible(false);
+    setRideId(null);
     ShowToast("Driver cancelled the ride", { type: 'error' });
-    setmode('booking')
-  })
+    setmode('booking');
+  }, []);
 
+  const handleNoDriversFound = useCallback((data: any) => {
+    console.log('no drivers found logs', data);
+    setmode('noDriversFound');
+    setRideId(null);
+    ShowToast("No drivers available", { type: 'error' });
+  }, []);
+
+  // Socket event listeners setup and cleanup
+  useEffect(() => {
+    if (socket) {
+      socket.on('rideAccepted', handleRideAccepted);
+      socket.on('driverArrived', handleDriverArrived);
+      socket.on('otpVerified', handleOtpVerified);
+      socket.on('rideCompleted', handleRideCompleted);
+      socket.on('driverLocationUpdate', handleDriverLocation);
+      socket.on('rideCancelled', handleRideCancelled);
+      socket.on('noDriversavailable', handleNoDriversFound);
+
+      return () => {
+        socket.off('rideAccepted', handleRideAccepted);
+        socket.off('driverArrived', handleDriverArrived);
+        socket.off('otpVerified', handleOtpVerified);
+        socket.off('rideCompleted', handleRideCompleted);
+        socket.off('driverLocationUpdate', handleDriverLocation);
+        socket.off('rideCancelled', handleRideCancelled);
+        socket.off('noDriversavailable', handleNoDriversFound);
+      };
+    }
+  }, [socket, handleRideAccepted, handleDriverArrived, handleOtpVerified,
+    handleRideCompleted, handleDriverLocation, handleRideCancelled]);
+
+  // Fix marker coordinates type issue
+  const markerCoordinates = useMemo(() => ({
+    pickup: pickupLocation?.lat && pickupLocation?.lng ? {
+      latitude: pickupLocation.lat,
+      longitude: pickupLocation.lng
+    } : null,
+    destination: destinationLocation?.lat && destinationLocation?.lng ? {
+      latitude: destinationLocation.lat,
+      longitude: destinationLocation.lng
+    } : null
+  }), [pickupLocation, destinationLocation]);
 
   useEffect(() => {
-    if(rideInfo?.data?.data?.ride?.status && rideInfo?.data?.data?.ride?.status !== 'cancelled') {
+    if (rideInfo?.data?.data?.ride?.status && rideInfo?.data?.data?.ride?.status !== 'cancelled' && rideInfo?.data?.data?.ride?.status !== 'searchingDriver') {
       setmode(rideInfo?.data?.data?.ride?.status)
     }
     if (rideInfo?.data?.data?.ride?.rideOtp) {
       setrideOtp(rideInfo?.data?.data?.ride?.rideOtp)
     }
   }, [rideInfo])
+
+  useEffect(() => {
+
+    refetch()
+
+  }, [])
 
 
   return (
@@ -228,84 +266,86 @@ export default function TripDetails() {
 
         {/* Cancel Ride Modal */}
         <Modal
-                isVisible={modalVisible}
-                animationIn="slideInUp"
-                animationOut="slideOutDown"
-                backdropOpacity={0.7}
-                onBackdropPress={() => setmodalVisible(false)}
-                style={styles.modal}
-                statusBarTranslucent
-                useNativeDriver
-                hideModalContentWhileAnimating
-            >
-                <View style={styles.modalContainer}>
-                    {/* Modal Header */}
-                    <View style={styles.modalHeader}>
-                        {/* <View style={styles.modalIndicator} /> */}
-                        <Text style={styles.modalTitle}>Cancel Ride</Text>
-                    </View>
+          isVisible={modalVisible}
+          animationIn="slideInUp"
+          animationOut="slideOutDown"
+          backdropOpacity={0.7}
+          onBackdropPress={() => setmodalVisible(false)}
+          style={styles.modal}
+          statusBarTranslucent
+          useNativeDriver
+          hideModalContentWhileAnimating
+        >
+          <View style={styles.modalContainer}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              {/* <View style={styles.modalIndicator} /> */}
+              <Text style={styles.modalTitle}>Cancel Ride</Text>
+            </View>
 
-                    {/* Modal Content */}
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalDescription}>
-                            Please select a reason for cancellation:
-                        </Text>
+            {/* Modal Content */}
+            <View style={styles.modalContent}>
+              <Text style={styles.modalDescription}>
+                Please select a reason for cancellation:
+              </Text>
 
-                        <FlatList
-                            data={cancelReasons}
-                            keyExtractor={(item) => item}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={styles.reasonButton}
-                                    activeOpacity={0.7}
-                                    onPress={() => {
-                                        cancelRideMutation.mutate({
-                                            id: rideId,
-                                            payload: { reason: item }
-                                        });
-                                    }}
-                                >
-                                    <Text style={styles.reasonText}>{item}</Text>
-                                    <Ionicons name="chevron-forward" size={20} color={Gold} />
-                                </TouchableOpacity>
-                            )}
-                            showsVerticalScrollIndicator={false}
-                            contentContainerStyle={styles.reasonsList}
-                        />
-                    </View>
+              <FlatList
+                data={cancelReasons}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.reasonButton}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      cancelRideMutation.mutate({
+                        id: rideId,
+                        payload: { reason: item }
+                      });
+                    }}
+                  >
+                    <Text style={styles.reasonText}>{item}</Text>
+                    <Ionicons name="chevron-forward" size={20} color={Gold} />
+                  </TouchableOpacity>
+                )}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.reasonsList}
+              />
+            </View>
 
-                    {/* Modal Footer */}
-                    <View style={styles.modalFooter}>
-                        <TouchableOpacity
-                            style={styles.cancelButton}
-                            activeOpacity={0.8}
-                            onPress={() => setmodalVisible(false)}
-                        >
-                            <Text style={styles.cancelButtonText}>Close</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
+            {/* Modal Footer */}
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                activeOpacity={0.8}
+                onPress={() => setmodalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
 
         <MapView
           style={styles.map}
           showsCompass={false}
           initialRegion={{
-            latitude: location.latitude,
-            longitude: location.longitude,
+            latitude: location?.latitude,
+            longitude: location?.longitude,
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
           }}
         >
-          <Marker
-            coordinate={{ latitude: pickupLocation?.lat, longitude: pickupLocation?.lng }}
-          ><Image source={require('../assets/logo/pickup.png')} style={{ width: 40, height: 40 }} /></Marker>
-          <Marker
-            coordinate={{
-              latitude: destinationLocation?.lat, longitude: destinationLocation?.lng
-            }}
-          ><Image source={require('../assets/logo/destination.png')} style={{ width: 35, height: 35 }} /></Marker>
+          {markerCoordinates.pickup && (
+            <Marker coordinate={markerCoordinates.pickup}>
+              <Image source={require('../assets/logo/pickup.png')} style={{ width: 40, height: 40 }} />
+            </Marker>
+          )}
+          {markerCoordinates.destination && (
+            <Marker coordinate={markerCoordinates.destination}>
+              <Image source={require('../assets/logo/destination.png')} style={{ width: 35, height: 35 }} />
+            </Marker>
+          )}
 
           <MapViewDirections
             origin={pickupCoord}
@@ -327,7 +367,7 @@ export default function TripDetails() {
           handleIndicatorStyle={{ backgroundColor: Gold }}
           backgroundStyle={{ backgroundColor: Black }}>
           <BottomSheetView style={styles.contentContainer}>
-            {mode === 'booking' && (
+            {(mode === 'booking' || mode === "noDriversFound") && (
               <>
                 <ScrollView style={{ maxHeight: '100%' }}>
                   {ridePrices.map((item: any) => (
@@ -461,7 +501,7 @@ export default function TripDetails() {
                   </Text>
                 </View> */}
 
-                <ScrollView 
+                <ScrollView
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={{ paddingBottom: 20 }}
                 >
@@ -476,30 +516,28 @@ export default function TripDetails() {
                   }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, justifyContent: 'space-between' }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <View style={{ 
-                        width: 24, 
-                        height: 24, 
-                        borderRadius: 24, 
-                        backgroundColor: 'rgba(255, 215, 0, 0.2)',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: 12
-                      }}>
-                        <Ionicons name="person" size={20} color={Gold} />
-                      </View>
-                      {/* <View> */}
+                        <View style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: 24,
+                          backgroundColor: 'rgba(255, 215, 0, 0.2)',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: 12
+                        }}>
+                          <Ionicons name="person" size={20} color={Gold} />
+                        </View>
                         <Text style={{ color: Gold, fontSize: 16, fontWeight: '600' }}>
                           {rideInfo?.data?.data?.ride?.driver?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName}
                         </Text>
+                      </View>
+                      {rideOtp && (
+                        <View style={{ backgroundColor: 'rgba(255, 107, 107, 0.4)', padding: 5, borderRadius: 10, marginLeft: 20, }}>
+                          <Text style={{ color: LightGold, fontSize: 16, fontWeight: '500' }}>
+                            OTP:  {rideOtp}
+                          </Text>
                         </View>
-                        {rideOtp && (
-                        <View style={{ backgroundColor: 'rgba(255, 107, 107, 0.4)', padding: 5, borderRadius: 10, marginLeft: 20,  }}>
-                        <Text style={{ color: LightGold, fontSize: 16, fontWeight: '500' }}>
-                          OTP:  {rideOtp}
-                        </Text>
-                        </View>
-                        )}
-                      {/* </View>/ */}
+                      )}
                     </View>
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
@@ -509,11 +547,11 @@ export default function TripDetails() {
                       </Text>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                    <Ionicons name="call" size={20} color={Gold} style={{ marginRight: 8 }} />
-                    <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
-                      {rideInfo?.data?.data?.ride?.driver?.phone}
-                    </Text>
-                  </View>
+                      <Ionicons name="call" size={20} color={Gold} style={{ marginRight: 8 }} />
+                      <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
+                        {rideInfo?.data?.data?.ride?.driver?.phone}
+                      </Text>
+                    </View>
                   </View>
 
                   {/* Ride Status */}
@@ -538,7 +576,6 @@ export default function TripDetails() {
                     backgroundColor: 'rgba(0, 0, 0, 0.5)',
                     marginBottom: 15
                   }}>
-                    {/* <Text style={{ color: Gold, fontSize: 16, marginBottom: 12 }}>PICKUP</Text> */}
                     <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
                       <View style={{ marginRight: 12, marginTop: 4 }}>
                         <Ionicons name="location" size={20} color="green" />
@@ -548,7 +585,6 @@ export default function TripDetails() {
                       </Text>
                     </View>
 
-                    {/* <Text style={{ color: Gold, fontSize: 18, marginBottom: 12 }}>DROP-OFF</Text> */}
                     <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                       <View style={{ marginRight: 12, marginTop: 4 }}>
                         <Ionicons name="location" size={20} color="red" />
@@ -582,9 +618,9 @@ export default function TripDetails() {
                 </TouchableOpacity>
               </View>
             )}
-            {mode === 'otp_verified' || mode === 'in_progress' && (
+            {(mode === 'otp_verified' || mode === 'in_progress') && (
               <View style={{ flex: 1 }}>
-              {/* <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+                {/* <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
                 <TouchableOpacity onPress={() => setmode('second')}>
                   <Ionicons name='chevron-back' size={24} color={Gold} />
                 </TouchableOpacity>
@@ -593,86 +629,94 @@ export default function TripDetails() {
                 </Text>
               </View> */}
 
-              <ScrollView 
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 20 }}
-              >
-                {/* Driver Details Card */}
-                <View style={{
-                  borderColor: Gold,
-                  borderWidth: 1,
-                  padding: 16,
-                  borderRadius: 16,
-                  marginBottom: 15,
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)'
-                }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <View style={{ 
-                      width: 24, 
-                      height: 24, 
-                      borderRadius: 24, 
-                      backgroundColor: 'rgba(255, 215, 0, 0.2)',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginRight: 12
-                    }}>
-                      <Ionicons name="person" size={20} color={Gold} />
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{ paddingBottom: 20 }}
+                >
+                <View style={styles.tripStatusContainer}>
+                    <View style={styles.statusItem}>
+                      <Ionicons name="time-outline" size={20} color={Gold} />
+                      <Text style={styles.statusText}>Trip in progress</Text>
                     </View>
-                    {/* <View> */}
-                      <Text style={{ color: Gold, fontSize: 16, fontWeight: '600' }}>
-                        {rideInfo?.data?.data?.ride?.driver?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName}
-                      </Text>
+                  </View>
+                  {/* Driver Details Card */}
+                  <View style={{
+                    borderColor: Gold,
+                    borderWidth: 1,
+                    padding: 16,
+                    borderRadius: 16,
+                    marginBottom: 15,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)'
+                  }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, justifyContent: 'space-between' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: 24,
+                          backgroundColor: 'rgba(255, 215, 0, 0.2)',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: 12
+                        }}>
+                          <Ionicons name="person" size={20} color={Gold} />
+                        </View>
+                        <Text style={{ color: Gold, fontSize: 16, fontWeight: '600' }}>
+                          {rideInfo?.data?.data?.ride?.driver?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName}
+                        </Text>
                       </View>
-                    {/* </View>/ */}
-                  </View>
-
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                    <Ionicons name="car" size={20} color={Gold} style={{ marginRight: 8 }} />
-                    <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
-                      {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model} • {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.licensePlate}
-                    </Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                  <Ionicons name="call" size={20} color={Gold} style={{ marginRight: 8 }} />
-                  <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
-                    {rideInfo?.data?.data?.ride?.driver?.phone}
-                  </Text>
-                </View>
-                </View>
-
-                {/* Location Details */}
-                <View style={{
-                  borderColor: Gold,
-                  borderWidth: 1,
-                  padding: 16,
-                  borderRadius: 16,
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                  marginBottom: 15
-                }}>
-                  {/* <Text style={{ color: Gold, fontSize: 16, marginBottom: 12 }}>PICKUP</Text> */}
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
-                    <View style={{ marginRight: 12, marginTop: 4 }}>
-                      <Ionicons name="location" size={20} color="green" />
                     </View>
-                    <Text style={{ color: LightGold, fontSize: 14, flex: 1, lineHeight: 22 }}>
-                      {rideInfo?.data?.data?.ride?.pickupLocation?.address}
-                    </Text>
-                  </View>
 
-                  {/* <Text style={{ color: Gold, fontSize: 18, marginBottom: 12 }}>DROP-OFF</Text> */}
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                    <View style={{ marginRight: 12, marginTop: 4 }}>
-                      <Ionicons name="location" size={20} color="red" />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                      <Ionicons name="car" size={20} color={Gold} style={{ marginRight: 8 }} />
+                      <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
+                        {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model} • {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.licensePlate}
+                      </Text>
                     </View>
-                    <Text style={{ color: LightGold, fontSize: 14, flex: 1, lineHeight: 22 }}>
-                      {rideInfo?.data?.data?.ride?.destination?.address}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                      <Ionicons name="call" size={20} color={Gold} style={{ marginRight: 8 }} />
+                      <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
+                        {rideInfo?.data?.data?.ride?.driver?.phone}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              </ScrollView>
 
-            </View>
+                  {/* Location Details */}
+                  <View style={{
+                    borderColor: Gold,
+                    borderWidth: 1,
+                    padding: 16,
+                    borderRadius: 16,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    marginBottom: 15
+                  }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
+                      <View style={{ marginRight: 12, marginTop: 4 }}>
+                        <Ionicons name="location" size={20} color="green" />
+                      </View>
+                      <Text style={{ color: LightGold, fontSize: 14, flex: 1, lineHeight: 22 }}>
+                        {rideInfo?.data?.data?.ride?.pickupLocation?.address}
+                      </Text>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                      <View style={{ marginRight: 12, marginTop: 4 }}>
+                        <Ionicons name="location" size={20} color="red" />
+                      </View>
+                      <Text style={{ color: LightGold, fontSize: 14, flex: 1, lineHeight: 22 }}>
+                        {rideInfo?.data?.data?.ride?.destination?.address}
+                      </Text>
+                    </View>
+                  </View>
+                  {/* <View style={styles.tripStatusContainer}>
+                    <View style={styles.statusItem}>
+                      <Ionicons name="time-outline" size={20} color={Gold} />
+                      <Text style={styles.statusText}>Trip in progress</Text>
+                    </View>
+                  </View> */}
+                </ScrollView>
+
+              </View>
             )}
           </BottomSheetView>
         </BottomSheet>
@@ -695,172 +739,191 @@ const styles = StyleSheet.create({
   map: {
     ...StyleSheet.absoluteFillObject,
   },
-      // Modal Styles
-      modal: {
-        margin: 0,
-        justifyContent: 'flex-end',
-    },
-    modalContainer: {
-        backgroundColor: Black,
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        paddingBottom: Platform.OS === 'ios' ? 34 : 24, // Extra padding for iOS devices with home indicator
-        overflow: 'hidden',
-    },
-    modalHeader: {
-        alignItems: 'center',
-        paddingTop: 12,
-        paddingBottom: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-    },
-    modalIndicator: {
-        width: 40,
-        height: 5,
-        backgroundColor: Gray,
-        borderRadius: 3,
-        marginBottom: 12,
-    },
-    modalTitle: {
-        color: Gold,
-        fontSize: 18,
-        fontWeight: '700',
-    },
-    modalContent: {
-        paddingHorizontal: 20,
-        paddingTop: 16,
-    },
-    modalDescription: {
-        color: White,
-        fontSize: 14,
-        marginBottom: 16,
-        opacity: 0.9,
-    },
-    reasonsList: {
-        paddingBottom: 8,
-    },
-    reasonButton: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.08)',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 10,
-    },
-    reasonText: {
-        color: White,
-        fontSize: 16,
-        fontWeight: '500',
-    },
-    modalFooter: {
-        paddingHorizontal: 20,
-        paddingTop: 16,
-    },
-    cancelButton: {
-        backgroundColor: '#8B3A3A',
-        borderRadius: 12,
-        padding: 16,
-        alignItems: 'center',
-        marginTop: 10
-    },
-    cancelButtonText: {
-        color: White,
-        fontSize: 16,
-        fontWeight: '700',
-    },
+  // Modal Styles
+  modal: {
+    margin: 0,
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: Black,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 24, // Extra padding for iOS devices with home indicator
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  modalIndicator: {
+    width: 40,
+    height: 5,
+    backgroundColor: Gray,
+    borderRadius: 3,
+    marginBottom: 12,
+  },
+  modalTitle: {
+    color: Gold,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  modalContent: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  modalDescription: {
+    color: White,
+    fontSize: 14,
+    marginBottom: 16,
+    opacity: 0.9,
+  },
+  reasonsList: {
+    paddingBottom: 8,
+  },
+  reasonButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 10,
+  },
+  reasonText: {
+    color: White,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  modalFooter: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  cancelButton: {
+    backgroundColor: '#8B3A3A',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 10
+  },
+  cancelButtonText: {
+    color: White,
+    fontSize: 16,
+    fontWeight: '700',
+  },
 
 
-    // OTP Section Styles
-    otpContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    otpInput: {
-        borderColor: Gold,
-        borderWidth: 2,
-        borderRadius: 10,
-        paddingHorizontal: 15,
-        height: 50,
-        width: '60%',
-        color: White,
-        fontSize: 16,
-    },
-    verifyButton: {
-        backgroundColor: Gold,
-        borderRadius: 10,
-        padding: 12,
-        width: '35%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        elevation: 2,
-        shadowColor: Gold,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 3,
-    },
-    verifyButtonText: {
-        color: White,
-        fontSize: 16,
-        fontWeight: '700',
-        textAlign: 'center',
-    },
+  // OTP Section Styles
+  otpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  otpInput: {
+    borderColor: Gold,
+    borderWidth: 2,
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    height: 50,
+    width: '60%',
+    color: White,
+    fontSize: 16,
+  },
+  verifyButton: {
+    backgroundColor: Gold,
+    borderRadius: 10,
+    padding: 12,
+    width: '35%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+    shadowColor: Gold,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  verifyButtonText: {
+    color: White,
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
 
-    // Trip Details Card Styles
-    tripDetailsCard: {
-        borderColor: Gold,
-        borderWidth: 2,
-        padding: 8,
-        marginTop: 20,
-        borderRadius: 12,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    },
-    locationRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 5,
-    },
-    iconContainer: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 15,
-    },
-    locationTitle: {
-        color: Gold,
-        fontSize: 16,
-        fontWeight: '700',
-        marginBottom: 4,
-    },
-    locationSubtitle: {
-        color: LightGold,
-        fontSize: 14,
-        flexWrap: 'wrap',
-        width: '55%',
-        // marginRight: 10,
-    },
+  // Trip Details Card Styles
+  tripDetailsCard: {
+    borderColor: Gold,
+    borderWidth: 2,
+    padding: 8,
+    marginTop: 20,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 5,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  locationTitle: {
+    color: Gold,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  locationSubtitle: {
+    color: LightGold,
+    fontSize: 14,
+    flexWrap: 'wrap',
+    width: '55%',
+    // marginRight: 10,
+  },
 
-    // Cancel Button Styles
-    cancelRideButton: {
-        backgroundColor: '#8B3A3A',
-        borderRadius: 10,
-        padding: 15,
-        marginTop: 20,
-        alignItems: 'center',
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 3,
-    },
-    cancelRideButtonText: {
-        color: White,
-        fontSize: 16,
-        fontWeight: '700',
-    },
+  // Cancel Button Styles
+  cancelRideButton: {
+    backgroundColor: '#8B3A3A',
+    borderRadius: 10,
+    padding: 15,
+    marginTop: 20,
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  cancelRideButtonText: {
+    color: White,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  tripStatusContainer: {
+    // marginTop: 10,
+    marginBottom: 10,
+  },
+  statusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+  },
+  statusText: {
+    color: White,
+    fontSize: 14,
+    marginLeft: 10,
+    fontWeight: '500',
+  },
 });

@@ -15,13 +15,14 @@ export default function Ratings({ route }: { route: any }) {
   const navigation: any = useNavigation();
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('')
-  const { rideId} = useAuthStore()
+  const { rideId, setRideId } = useAuthStore()
   
   // ratigns mutation
   const ratingsMutation = useMutation({
     mutationFn: (data: any) => ratingRide(data, rideId),
     onSuccess: (response) => {
       console.log("ratingsMutation success", response);
+      setRideId(null)
       navigation.navigate('Main')
     },
     onError: (error: any) => {
@@ -51,7 +52,10 @@ export default function Ratings({ route }: { route: any }) {
           <Ionicons name="arrow-back" size={24} color={Gold} />
         </TouchableOpacity> */}
         <Text style={styles.headerText}>Rate Your Trip</Text>
-        <TouchableOpacity style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}} onPress={() => navigation.navigate('Main')}>
+        <TouchableOpacity style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}} onPress={() => {
+          setRideId(null)
+          navigation.navigate('Main')
+        }}>
           <Text style={{color: Gold, fontSize: 16, fontWeight: '500'}}>Skip</Text>
           <Ionicons name="chevron-forward" size={24} color={Gold} />
         </TouchableOpacity>

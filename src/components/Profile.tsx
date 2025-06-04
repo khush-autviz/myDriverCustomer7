@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { launchImageLibrary, ImageLibraryOptions } from 'react-native-image-picker'
 import { editProfile, getProfile } from '../constants/Api'
+import { ShowToast } from '../lib/Toast'
 
 
 export default function Profile() {
@@ -77,12 +78,13 @@ export default function Profile() {
     },
     onError: (error) => {
       console.log('profile update error', error);
+      ShowToast('Something went wrong', {type: 'error'})
     }
   })
 
   // handles update
   const handleUpdate = () => {
-    if (data.email.trim() === '' || data.firstName.trim() === '' || data.lastName.trim() === '') {
+    if (data?.email?.trim() === '' || data?.firstName?.trim() === '' || data?.lastName?.trim() === '') {
       return
     }
 
@@ -115,10 +117,10 @@ useEffect(() => {
     console.log(UserDetails);
     
     setdata({
-      firstName: UserDetails?.data?.firstName,
-      lastName: UserDetails?.data?.lastName,
-      email: UserDetails?.data?.email,
-      profilePhoto: UserDetails?.data?.documents?.profilePhoto?.image,
+      firstName: UserDetails?.data?.data?.firstName,
+      lastName: UserDetails?.data?.data?.lastName,
+      email: UserDetails?.data?.data?.email,
+      profilePhoto: UserDetails?.data?.data?.documents?.profilePhoto?.image,
     })
   }
 

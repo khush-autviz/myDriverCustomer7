@@ -44,7 +44,7 @@ export const CreateRide = async (data: any) => {
 
 // get ride history
 export const getRideHistory = async () => {
-    const response = await axios.get(`/ride/history`)
+    const response = await axios.get(`/ride`)
     return response
 }
 
