@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Black, DarkGray, Gold, Gray, LightGold, White } from '../constants/Color'
 import Ionicons from 'react-native-vector-icons/Ionicons'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import { TextInput } from 'react-native-gesture-handler'
 import { ratingRide } from '../constants/Api'
 import { useAuthStore } from '../store/authStore'
@@ -11,12 +11,15 @@ import { useMutation } from '@tanstack/react-query'
 import { ShowToast } from '../lib/Toast'
 import Loader from './Loader'
 
-export default function Ratings({ route }: { route: any }) {
+export default function Ratings() {
   const navigation: any = useNavigation();
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('')
-  const { rideId, setRideId } = useAuthStore()
-  
+  const { rideId: ride_id1, setRideId } = useAuthStore()
+  const route: any = useRoute();
+  const { rideId: ride_id2 } = route.params;
+  const rideId = ride_id1 ?? ride_id2;
+
   // ratigns mutation
   const ratingsMutation = useMutation({
     mutationFn: (data: any) => ratingRide(data, rideId),

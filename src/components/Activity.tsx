@@ -78,9 +78,9 @@ export default function Activity() {
     sum + (parseFloat(ride.price) || 0), 0).toFixed(2);
 
   const renderRideItem = ({ item }: any) => (
-    <View 
+    <TouchableOpacity 
       style={styles.activityItem}
-      // onPress={() => navigation.navigate('TripDetails', { rideId: item.id })}
+      onPress={() => navigation.navigate('RideDetails', { ride: item })}
     >
       {/* <View style={styles.activityIconContainer}>
         <Ionicons name="car" size={20} color={Gold} />
@@ -111,7 +111,7 @@ export default function Activity() {
           <Text style={styles.statusText}>{item.status || 'Unknown'}</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   // Empty state component

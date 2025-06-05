@@ -9,32 +9,33 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { launchImageLibrary, ImageLibraryOptions } from 'react-native-image-picker'
 import { editProfile, getProfile } from '../constants/Api'
 import { ShowToast } from '../lib/Toast'
+import Loader from './Loader'
 
 
 export default function Profile() {
-  const USER = useAuthStore(state => state.user)
+  // const USER = useAuthStore(state => state.user)
   const [buttonDisabled, setbuttonDisabled] = useState(true)
-  const { user, setUser, token } = useAuthStore()
+  const { user, setUser } = useAuthStore()
   const navigation: any = useNavigation()
-  const [data, setdata] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || '',
-    profilePhoto: user?.profilePhoto ?? null,
+  const [data, setdata] = useState<any>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    profilePhoto: null
   })
 
 
   // handle data
   const handledata = (field: string, value: any) => {
     setbuttonDisabled(false)
-    setdata(prev => ({
+    setdata((prev: any) => ({
       ...prev,
       [field]: value,
     }))
   }
 
     // fetches user info
-    const {data: UserDetails, } = useQuery({
+    const {data: UserDetails, isLoading} = useQuery({
       queryKey: ['user-details'],
       queryFn: getProfile,
       // staleTime: 5 * 60 * 1000, // 5 minutes
@@ -78,13 +79,14 @@ export default function Profile() {
     },
     onError: (error) => {
       console.log('profile update error', error);
-      ShowToast('Something went wrong', {type: 'error'})
+      ShowToast(error?.message ,{type: 'error'})
     }
   })
 
   // handles update
   const handleUpdate = () => {
     if (data?.email?.trim() === '' || data?.firstName?.trim() === '' || data?.lastName?.trim() === '') {
+      ShowToast('Please fill all the fields', {type: 'error'})
       return
     }
 
@@ -97,7 +99,7 @@ export default function Profile() {
 
     // Append profile photo if available
     if (data.profilePhoto) {
-      const photoName = data.profilePhoto.split('/').pop() || 'profile.jpg';
+      const photoName = data?.profilePhoto?.split('/').pop() || 'profile.jpg';
       const photoType = photoName.endsWith('.png') ? 'image/png' : 'image/jpeg';
       
     //   // @ts-ignore - TypeScript doesn't recognize the FormData append with file object
@@ -108,13 +110,14 @@ export default function Profile() {
       });
     }
     
+    console.log("UserDetails formData", formData);
+
     updateProfileMutation.mutateAsync(formData)
   }
 
 
 useEffect(() => {
   if (UserDetails) {
-    console.log(UserDetails);
     
     setdata({
       firstName: UserDetails?.data?.data?.firstName,
@@ -215,6 +218,7 @@ useEffect(() => {
 
 
     <SafeAreaView style={{paddingHorizontal: 20, flex: 1, backgroundColor: Black}}>
+      {isLoading && <Loader />}
       <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 20}}>
         <TouchableOpacity onPress={() => navigation.goBack()} >
           <Ionicons name="chevron-back" size={20} color={Gold} />

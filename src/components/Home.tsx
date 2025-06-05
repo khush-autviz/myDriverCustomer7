@@ -379,7 +379,7 @@ export default function Home() {
         </View>
 
         {/* Recent Trips */}
-        <View style={styles.recentTrips}>
+        {/* <View style={styles.recentTrips}>
           <Text style={styles.sectionTitle}>Recent Trips</Text>
           <TouchableOpacity style={styles.tripItem}>
             <View style={styles.tripIconContainer}>
@@ -391,7 +391,7 @@ export default function Home() {
             </View>
             <Ionicons name="chevron-forward" size={20} color={Gold} />
           </TouchableOpacity>
-        </View>
+        </View> */}
 
         {/* Bottom spacing */}
         <View style={{ height: 20 }} />

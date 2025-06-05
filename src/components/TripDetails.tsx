@@ -197,6 +197,15 @@ export default function TripDetails() {
     ShowToast("No drivers available", { type: 'error' });
   }, []);
 
+  const handleNearbyDrivers = useCallback((data: any) => {
+    console.log('nearby drivers', data);
+    // setmode('searchingDriver');
+  }, []);
+
+  socket?.emit('searchNearbyDrivers', {
+    pickupCoords: pickupCoord
+  });
+
   // Socket event listeners setup and cleanup
   useEffect(() => {
     if (socket) {
@@ -207,6 +216,7 @@ export default function TripDetails() {
       socket.on('driverLocationUpdate', handleDriverLocation);
       socket.on('rideCancelled', handleRideCancelled);
       socket.on('noDriversavailable', handleNoDriversFound);
+      socket.on('nearbyDrivers', handleNearbyDrivers);
 
       return () => {
         socket.off('rideAccepted', handleRideAccepted);
@@ -216,6 +226,7 @@ export default function TripDetails() {
         socket.off('driverLocationUpdate', handleDriverLocation);
         socket.off('rideCancelled', handleRideCancelled);
         socket.off('noDriversavailable', handleNoDriversFound);
+        socket.off('nearbyDrivers', handleNearbyDrivers);
       };
     }
   }, [socket, handleRideAccepted, handleDriverArrived, handleOtpVerified,
@@ -252,7 +263,8 @@ export default function TripDetails() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Black }}>
       <GestureHandlerRootView style={styles.container}>
-        {/* <TouchableOpacity
+        { (mode === 'searchingDriver' || mode === 'booking') && (
+        <TouchableOpacity
           style={{
             position: 'absolute',
             top: 20,
@@ -261,8 +273,8 @@ export default function TripDetails() {
           }}
           onPress={() => navigation.navigate('Main')}>
           <Ionicons name="chevron-back-circle" size={32} color={Gold} />
-        </TouchableOpacity> */}
-
+        </TouchableOpacity>
+        )}
 
         {/* Cancel Ride Modal */}
         <Modal
