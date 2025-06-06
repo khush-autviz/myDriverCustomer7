@@ -4,15 +4,15 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Black, DarkGray, Gold, Gray, LightGold, White } from '../constants/Color'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { useAuthStore } from '../store/authStore'
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 
 export default function Account() {
-  const USER = useAuthStore(state => state.user)
+  var USER = useAuthStore(state => state.user)
   const LOGOUT = useAuthStore(state => state.logout)
   const navigation: any = useNavigation()
 
   const handleLogout = () => {
-    navigation.navigate('Signin')
+    navigation.replace('Signin')
     LOGOUT()
   }
 
@@ -61,6 +61,7 @@ export default function Account() {
     }
   ]
 
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -74,7 +75,7 @@ export default function Account() {
           <View style={styles.profileImageContainer}>
             {USER?.profilePhoto ? (
               <Image 
-                source={{ uri: `https://t1wfswdh-3000.inc1.devtunnels.ms/${USER.profilePhoto}` }} 
+                source={{ uri: `http://3.110.180.116:3000/${USER.profilePhoto}` }} 
                 style={styles.profileImage} 
               />
             ) : (

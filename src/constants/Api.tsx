@@ -26,7 +26,11 @@ export const getProfile = async () => {
 
 // edit profile
 export const editProfile = async (data: any) => {
-    const response = await axios.patch('/user/profile/edit', data)
+    const response = await axios.put('/user/profile/edit', data, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        }
+    })
     return response
 }
 

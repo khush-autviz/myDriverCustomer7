@@ -37,7 +37,7 @@ export default function Profile() {
     // fetches user info
     const {data: UserDetails, isLoading} = useQuery({
       queryKey: ['user-details'],
-      queryFn: getProfile,
+    queryFn: getProfile,
       // staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: true,
     })
@@ -74,12 +74,23 @@ export default function Profile() {
     mutationFn: editProfile,
     onSuccess: (response) => {
       console.log('profile update success', response);
-      setUser({...user, ...response?.data})
+      setUser({...user, ...response?.data?.data})
       setbuttonDisabled(true)
+      ShowToast('Profile updated successfully', {type: 'success'})
     },
-    onError: (error) => {
-      console.log('profile update error', error);
-      ShowToast(error?.message ,{type: 'error'})
+    onError: (error: any) => {
+      // Log the full error first
+      console.log('Full error object:', error);
+      
+      // Then log specific parts that might be helpful
+      const errorDetails = {
+        message: error?.message || 'Unknown error',
+        status: error?.response?.status,
+        responseData: error?.response?.data,
+      };
+      console.log('Profile update error details:', errorDetails);
+      
+      ShowToast(error?.response?.data?.message || error?.message || 'Failed to update profile', {type: 'error'})
     }
   })
 
@@ -92,25 +103,38 @@ export default function Profile() {
 
     const formData = new FormData()
 
-    formData.append('driverId', user?.id)
-    formData.append('firstName', data.firstName)
-    formData.append('lastName', data.lastName)
-    formData.append('email', data.email)
+    // Add basic user info
+    formData.append('firstName', data.firstName.trim())
+    formData.append('lastName', data.lastName.trim())
+    formData.append('email', data.email.trim())
 
-    // Append profile photo if available
-    if (data.profilePhoto) {
-      const photoName = data?.profilePhoto?.split('/').pop() || 'profile.jpg';
-      const photoType = photoName.endsWith('.png') ? 'image/png' : 'image/jpeg';
+    // Append profile photo if available and changed
+    if (data.profilePhoto && !data.profilePhoto.startsWith('http')) {
+      const photoName = data.profilePhoto.split('/').pop() || 'profile.jpg'
+      const photoType = photoName.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg'
       
-    //   // @ts-ignore - TypeScript doesn't recognize the FormData append with file object
-      formData.append('profilePhoto', {
+      const photoFile = {
         uri: Platform.OS === 'android' ? data.profilePhoto : data.profilePhoto.replace('file://', ''),
         type: photoType,
         name: photoName,
-      });
+      }
+      formData.append('profilePhoto', photoFile as any)
+      
+      // Log the photo file details separately
+      console.log('Photo file details:', {
+        uri: photoFile.uri,
+        type: photoType,
+        name: photoName
+      })
     }
     
-    console.log("UserDetails formData", formData);
+    // Log form data contents
+    console.log('Form data being sent:', {
+      firstName: data.firstName.trim(),
+      lastName: data.lastName.trim(),
+      email: data.email.trim(),
+      hasPhoto: data.profilePhoto && !data.profilePhoto.startsWith('http')
+    })
 
     updateProfileMutation.mutateAsync(formData)
   }
@@ -229,7 +253,8 @@ useEffect(() => {
         <TouchableOpacity onPress={handleImageUpload}>
           {data.profilePhoto ? (
             <Image 
-              source={{ uri: `https://t1wfswdh-3000.inc1.devtunnels.ms/${data.profilePhoto}` }} 
+              // source={{ uri: `https://t1wfswdh-3000.inc1.devtunnels.ms/${data.profilePhoto}` }} 
+              source={{ uri: `http://3.110.180.116:3000/${data.profilePhoto}` }} 
               style={{width: 100, height: 100, borderRadius: 50}} 
             />
           ) : (

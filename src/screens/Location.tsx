@@ -268,7 +268,7 @@ export default function Location() {
 
   // Navigate when both locations are selected
   if (pickupSelected && dropSelected) {
-    setTimeout(() => navigation.navigate('TripDetails'), 100);
+    setTimeout(() => navigation.replace('TripDetails'), 100);
   }
 
   return (

@@ -156,9 +156,9 @@ export default function TripDetails() {
 
   // Socket event handlers
   const handleRideAccepted = useCallback((data: any) => {
-    console.log('ride accepted', data);
+    console.log('ride accepted', data.driver);
     refetch();
-    setdriverDetails(data);
+    setdriverDetails(data.driver);
     setmode('accepted');
   }, [refetch]);
 
@@ -174,7 +174,13 @@ export default function TripDetails() {
 
   const handleRideCompleted = useCallback((data: any) => {
     console.log('ride completed', data);
-    navigation.replace('Ratings');
+    // navigation.replace('Ratings', {rideId: rideId});
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Ratings', params: { rideId: rideId } }],
+    });
+    // setRideId(null)
+    // navigation.replace('Main')
   }, [navigation]);
 
   const handleDriverLocation = useCallback((data: any) => {
@@ -192,7 +198,7 @@ export default function TripDetails() {
 
   const handleNoDriversFound = useCallback((data: any) => {
     console.log('no drivers found logs', data);
-    setmode('noDriversFound');
+    setmode('booking');
     setRideId(null);
     ShowToast("No drivers available", { type: 'error' });
   }, []);
@@ -202,9 +208,9 @@ export default function TripDetails() {
     // setmode('searchingDriver');
   }, []);
 
-  socket?.emit('searchNearbyDrivers', {
-    pickupCoords: pickupCoord
-  });
+  // socket?.emit('searchNearbyDrivers', {
+  //   pickupCoords: pickupCoord
+  // });
 
   // Socket event listeners setup and cleanup
   useEffect(() => {
@@ -215,8 +221,8 @@ export default function TripDetails() {
       socket.on('rideCompleted', handleRideCompleted);
       socket.on('driverLocationUpdate', handleDriverLocation);
       socket.on('rideCancelled', handleRideCancelled);
-      socket.on('noDriversavailable', handleNoDriversFound);
-      socket.on('nearbyDrivers', handleNearbyDrivers);
+      socket.on('noDriversAvailable', handleNoDriversFound);
+      // socket.on('nearbyDrivers', handleNearbyDrivers);
 
       return () => {
         socket.off('rideAccepted', handleRideAccepted);
@@ -225,8 +231,8 @@ export default function TripDetails() {
         socket.off('rideCompleted', handleRideCompleted);
         socket.off('driverLocationUpdate', handleDriverLocation);
         socket.off('rideCancelled', handleRideCancelled);
-        socket.off('noDriversavailable', handleNoDriversFound);
-        socket.off('nearbyDrivers', handleNearbyDrivers);
+        socket.off('noDriversAvailable', handleNoDriversFound);
+        // socket.off('nearbyDrivers', handleNearbyDrivers);
       };
     }
   }, [socket, handleRideAccepted, handleDriverArrived, handleOtpVerified,
@@ -246,8 +252,14 @@ export default function TripDetails() {
 
   useEffect(() => {
     if (rideInfo?.data?.data?.ride?.status && rideInfo?.data?.data?.ride?.status !== 'cancelled' && rideInfo?.data?.data?.ride?.status !== 'searchingDriver') {
+      console.log(rideInfo?.data?.data?.ride?.status, 'rideInfo?.data?.data?.ride?.status');
       setmode(rideInfo?.data?.data?.ride?.status)
     }
+
+     if (rideInfo?.data?.data?.ride?.status === 'completed') {
+      setmode('booking')
+    }
+
     if (rideInfo?.data?.data?.ride?.rideOtp) {
       setrideOtp(rideInfo?.data?.data?.ride?.rideOtp)
     }
@@ -259,11 +271,14 @@ export default function TripDetails() {
 
   }, [])
 
+  console.log(mode, 'mode');
+  
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Black }}>
       <GestureHandlerRootView style={styles.container}>
-        { (mode === 'searchingDriver' || mode === 'booking') && (
+        { (mode === 'searchingDriver' || mode === 'booking' || mode === 'noDriversFound') && (
         <TouchableOpacity
           style={{
             position: 'absolute',
@@ -344,8 +359,8 @@ export default function TripDetails() {
           initialRegion={{
             latitude: location?.latitude,
             longitude: location?.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
           }}
         >
           {markerCoordinates.pickup && (
@@ -540,7 +555,7 @@ export default function TripDetails() {
                           <Ionicons name="person" size={20} color={Gold} />
                         </View>
                         <Text style={{ color: Gold, fontSize: 16, fontWeight: '600' }}>
-                          {rideInfo?.data?.data?.ride?.driver?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName}
+                          {rideInfo?.data?.data?.ride?.driver?.firstName ?? driverDetails?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName ?? driverDetails?.lastName}
                         </Text>
                       </View>
                       {rideOtp && (
@@ -555,13 +570,13 @@ export default function TripDetails() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                       <Ionicons name="car" size={20} color={Gold} style={{ marginRight: 8 }} />
                       <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
-                        {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model} • {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.licensePlate}
+                        {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand ?? driverDetails?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model ?? driverDetails?.vehicleDetails?.model} • {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.licensePlate ?? driverDetails?.vehicleDetails?.licensePlate}
                       </Text>
-                    </View>
+                    </View> 
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                       <Ionicons name="call" size={20} color={Gold} style={{ marginRight: 8 }} />
                       <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
-                        {rideInfo?.data?.data?.ride?.driver?.phone}
+                        {rideInfo?.data?.data?.ride?.driver?.phone ?? driverDetails?.phone}
                       </Text>
                     </View>
                   </View>
