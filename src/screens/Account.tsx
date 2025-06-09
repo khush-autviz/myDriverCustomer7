@@ -12,7 +12,10 @@ export default function Account() {
   const navigation: any = useNavigation()
 
   const handleLogout = () => {
-    navigation.replace('Signin')
+    navigation.reset({
+      index: 0,
+      routes: [{name: 'Signin'}],
+    });
     LOGOUT()
   }
 
@@ -24,20 +27,20 @@ export default function Account() {
       onPress: () => navigation.navigate('Profile'),
       important: true
     },
-    {
-      icon: 'settings',
-      label: 'Settings',
-      onPress: () => {},
-      important: true
-    },
-    {
-      icon: 'chatbubbles',
-      label: 'Messages',
-      onPress: () => {},
-      important: true,
-      badge: true,
-      badgeCount: 3
-    },
+    // {
+    //   icon: 'settings',
+    //   label: 'Settings',
+    //   onPress: () => {},
+    //   important: true
+    // },
+    // {
+    //   icon: 'chatbubbles',
+    //   label: 'Messages',
+    //   onPress: () => {},
+    //   important: true,
+    //   badge: true,
+    //   badgeCount: 3
+    // },
     // {
     //   icon: 'flame',
     //   label: 'Points & Rewards',

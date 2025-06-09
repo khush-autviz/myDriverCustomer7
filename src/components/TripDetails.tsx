@@ -357,8 +357,10 @@ export default function TripDetails() {
           style={styles.map}
           showsCompass={false}
           initialRegion={{
-            latitude: location?.latitude,
-            longitude: location?.longitude,
+            // latitude: location?.latitude,
+            // longitude: location?.longitude,
+            latitude: pickupLocation?.lat ?? 0,     //CHANGE 
+             longitude: pickupLocation?.lng ?? 0,   //CHANGE 
             latitudeDelta: 0.05,
             longitudeDelta: 0.05,
           }}

@@ -442,7 +442,7 @@ export default function Signup() {
             </View>
             
             {/* Phone Number Display */}
-            {mobileNumber && (
+            {/* {mobileNumber && (
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Phone Number</Text>
                 <View style={styles.phoneDisplay}>
@@ -450,7 +450,7 @@ export default function Signup() {
                   <Text style={styles.phoneText}>{mobileNumber}</Text>
                 </View>
               </View>
-            )}
+            )} */}
 
             {/* Signup Button */}
             <TouchableOpacity

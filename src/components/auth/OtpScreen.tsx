@@ -149,9 +149,15 @@ export default function OtpScreen() {
       if (response.data.data.user.registrationComplete) {
         SETTOKEN({access_token: response.data.data.access_token, refresh_token: response.data.data.refresh_token});
         SETUSER(response.data.data.user);
-        navigation.replace('Main');
+        navigation.reset({
+          index: 0,
+          routes: [{name: 'Main'}],
+        });
       } else {
-        navigation.replace('Signup', {mobileNumber});
+        navigation.reset({
+          index: 0,
+          routes: [{name: 'Signup', params: {mobileNumber}}],
+        });
       }
     },
     onError: (error: any) => {
