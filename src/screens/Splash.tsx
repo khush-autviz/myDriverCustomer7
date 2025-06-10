@@ -29,7 +29,7 @@ const Splash = ({ navigation }: {navigation: any}) => {
       // Check if user has seen onboarding
       const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
 
-      if(!token?.access_token || isLoading){
+      if(isLoading){
         return
       }
       

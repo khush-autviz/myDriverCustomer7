@@ -152,6 +152,8 @@ export default function Profile() {
   }, [UserDetails]);
 
 
+  console.log('profile image', data.profileImage);
+  
 
 
   return (
