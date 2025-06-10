@@ -26,11 +26,12 @@ export const getProfile = async () => {
 
 // edit profile
 export const editProfile = async (data: any) => {
-    const response = await axios.put('/user/profile/edit', data, {
+    const response = await axios.put('/user/profile/edit', data
+        , {
         headers: {
             'Content-Type': 'multipart/form-data',
-        }
-    })
+        }}
+)
     return response
 }
 
@@ -43,7 +44,7 @@ export const calculateRidePrice = async (data: any) => {
 // create ride
 export const CreateRide = async (data: any) => {
     const response = await axios.post('/ride/create', data)
-    return response
+    return response 
 }
 
 // get ride history

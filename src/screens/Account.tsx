@@ -11,6 +11,9 @@ export default function Account() {
   const LOGOUT = useAuthStore(state => state.logout)
   const navigation: any = useNavigation()
 
+  console.log('USER', USER);
+  
+
   const handleLogout = () => {
     navigation.reset({
       index: 0,
@@ -76,9 +79,9 @@ export default function Account() {
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <View style={styles.profileImageContainer}>
-            {USER?.profilePhoto ? (
+            {USER?.profileImage ? (
               <Image 
-                source={{ uri: `http://3.110.180.116:3000/${USER.profilePhoto}` }} 
+                source={{ uri: `https://t1wfswdh-3000.inc1.devtunnels.ms/${USER.profileImage}` }} 
                 style={styles.profileImage} 
               />
             ) : (
