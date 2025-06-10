@@ -78,7 +78,7 @@ export default function OtpScreen() {
       <View style={styles.container}>
         <TouchableOpacity 
           style={styles.backButton} 
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.replace('Signin')}
         >
           <View style={styles.backRow}>
             <Ionicons name="chevron-back" size={20} color={White} />
@@ -125,7 +125,7 @@ export default function OtpScreen() {
       <TouchableOpacity 
         style={[
           styles.verifyButton,
-          (isLoading || otp.length !== 4) && styles.verifyButtonDisabled
+          // (isLoading || otp.length !== 4) && styles.verifyButtonDisabled
         ]} 
         onPress={handleVerify}
         disabled={isLoading || otp.length !== 4}

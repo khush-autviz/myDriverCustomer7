@@ -166,19 +166,19 @@ export default function Profile() {
         <Text style={{ color: Gold, fontSize: 20, fontWeight: '500' }}>Profile</Text>
       </View>
       <View style={{ display: 'flex', alignItems: 'center', marginTop: 40 }}>
-        <TouchableOpacity onPress={handleImageUpload}>
+        {/* <TouchableOpacity onPress={handleImageUpload}>
           {data.profileImage ? (
             <Image
-              source={{ uri: `https://t1wfswdh-3000.inc1.devtunnels.ms/${data.profileImage}` }}
-              // source={{ uri: `http://3.110.180.116:3000/${data.profileImage}` }} 
+              // source={{ uri: `https://t1wfswdh-3000.inc1.devtunnels.ms/${data.profileImage}` }}
+              source={{ uri: `http://3.110.180.116:3000/${data.profileImage}` }} 
               style={{ width: 100, height: 100, borderRadius: 50 }}
             />
-          ) : (
+          ) : ( */}
             <Image
               source={require('..//assets/images/user.png')}
               style={{ width: 100, height: 100, borderRadius: 50 }}
             />
-          )}
+          {/* )}
           <View style={{
             position: 'absolute',
             bottom: 0,
@@ -189,7 +189,7 @@ export default function Profile() {
           }}>
             <Ionicons name="camera" size={20} color={White} />
           </View>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
       <Text style={{ color: White, fontSize: 20, textAlign: 'center', marginTop: 15, fontWeight: '500' }}>{user?.firstName + " " + user?.lastName}</Text>
       <Text style={{ color: Gray, marginTop: 20, fontSize: 15 }}>First Name</Text>
