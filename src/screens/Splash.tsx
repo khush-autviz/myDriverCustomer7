@@ -14,7 +14,7 @@ const Splash = ({ navigation }: {navigation: any}) => {
   const setRideId = useAuthStore(state => state.setRideId);
 
   // user details query
-  const {data: userDetails} = useQuery({
+  const {data: userDetails, isLoading} = useQuery({
     queryKey: ['userDetails'],
     queryFn: getProfile,
     enabled: !!token,
@@ -28,10 +28,14 @@ const Splash = ({ navigation }: {navigation: any}) => {
     const checkAuthAndOnboarding = async () => {
       // Check if user has seen onboarding
       const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
+
+      if(!token?.access_token || isLoading){
+        return
+      }
       
       // Wait for 2 seconds to show splash screen
       setTimeout(() => {
-        if (token && token.access_token) {
+        if (token && token.access_token && !isLoading) {
           // If token exists, navigate to Main tabs
           if(!userDetails?.data?.data?.registrationComplete){
             navigation.replace('Signup', {mobileNumber: userDetails?.data?.data?.phone});
@@ -53,7 +57,7 @@ const Splash = ({ navigation }: {navigation: any}) => {
     };
 
     checkAuthAndOnboarding();
-  }, [navigation, token, userDetails]);
+  }, [navigation, token, userDetails, isLoading]);
 
   return (
     <View style={styles.container}>

@@ -47,10 +47,10 @@ export default function Ratings() {
       {/* {ratingsMutation.isPending && (
         <ActivityIndicator size="large" color={Gold} />
       )} */}
-      <View style={styles.header}>
-        {ratingsMutation.isPending && (
+      {ratingsMutation.isPending && (
          <Loader />
         )}
+      <View style={styles.header}>
         {/* <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Gold} />
         </TouchableOpacity> */}

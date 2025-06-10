@@ -165,6 +165,7 @@ export default function TripDetails() {
   const handleDriverArrived = useCallback((data: any) => {
     console.log('driver arrived', data);
     setrideOtp(data.rideOtp);
+    setmode('arrived');
   }, []);
 
   const handleOtpVerified = useCallback((data: any) => {
@@ -525,6 +526,11 @@ export default function TripDetails() {
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={{ paddingBottom: 20 }}
                 >
+                  {mode === 'accepted' && (
+                    <Text style={{color: White, fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 10, marginTop: 10}}>
+                      Your driver is on their way to pick you up
+                    </Text>
+                  )}
 
                  {/* Driver Details Card */}
                  <View style={styles.driverCard}>
@@ -577,6 +583,24 @@ export default function TripDetails() {
                       <Ionicons name="navigate" size={20} color={Gold} />
                       <Text style={styles.routeHeaderText}>Trip Route</Text>
                     </View> */}
+
+                    {/* fare card */}
+                    <View style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      padding: 5,
+                      borderRadius: 10,
+                      marginBottom: 10,
+                      display: 'flex',
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}>
+                      <Text style={{color: Gold, fontSize: 16, fontWeight: '700'}}>Fare</Text>
+                      <Text style={{color: Gold, fontSize: 16, fontWeight: '700'}}>${rideInfo?.data?.data?.ride?.fare.toFixed(2)}</Text>
+                      {/* <Text style={{color: Gold, fontSize: 16, fontWeight: '700'}}>
+                        <Ionicons name="cash" size={20} color={Gold} />
+                      </Text> */}
+                    </View>
                     
                     {/* Pickup Location */}
                     <View style={styles.locationRow}>
@@ -605,7 +629,7 @@ export default function TripDetails() {
                   </View>
 
 
-                  {mode === 'arrived' && rideOtp && (
+                  {/* {mode === 'arrived' && rideOtp && (
                     <View style={styles.otpVerificationCard}>
                       <View style={styles.otpCardHeader}>
                         <Ionicons name="keypad" size={20} color={Gold} />
@@ -616,7 +640,7 @@ export default function TripDetails() {
                         <Text style={styles.otpDisplayText}>{rideOtp}</Text>
                       </View>
                     </View>
-                  )}
+                  )} */}
                 </ScrollView>
 
                 {/* Action Button */}
@@ -893,7 +917,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#8B3A3A',
     borderRadius: 10,
     padding: 15,
-    marginTop: 20,
+    // marginTop: 20,
     alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',

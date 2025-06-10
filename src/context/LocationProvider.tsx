@@ -68,7 +68,7 @@ import React, {
         },
         (error) => {
           console.error('Error getting location:', error.message);
-          Alert.alert('Error', 'Failed to get location: ' + error.message);
+          // Alert.alert('Error', 'Failed to get location: ' + error.message);
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
       );

@@ -18,19 +18,33 @@ import {
 } from '../constants/Color';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
-import { useSocket } from '../context/SocketContext';
 import { useAuthStore } from '../store/authStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocation } from '../context/LocationProvider';
+import { ShowToast } from '../lib/Toast';
 
 export default function Home() {
   const navigation: any = useNavigation();
-  const {user} = useAuthStore()
+  const { user } = useAuthStore()
+  const { location } = useLocation()
+
+  console.log('location', location);
+
+  const handleSearch = () => {
+    if (!location) {
+      ShowToast('Please enable location services to continue',
+        {type: 'error',}
+      );
+      return;
+    }
+    navigation.navigate('Location');
+  }
 
   const logAllLocalStorage = async () => {
     try {
       const allKeys = await AsyncStorage.getAllKeys();
       const allItems = await AsyncStorage.multiGet(allKeys);
-  
+
       console.log('📦 AsyncStorage contents:');
       allItems.forEach(([key, value]) => {
         console.log(`${key}:`, value);
@@ -39,12 +53,12 @@ export default function Home() {
       console.error('❌ Error reading AsyncStorage:', error);
     }
   };
-  
+
   // Call this function wherever appropriate
   useEffect(() => {
     logAllLocalStorage();
   }, []);
-  
+
 
   return (
     <>
@@ -71,9 +85,9 @@ export default function Home() {
             color={Gray}
             style={{ paddingStart: 10 }}
           />
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.searchInput}
-            onPress={() => navigation.navigate('Location')}
+            onPress={handleSearch}
           >
             <Text style={styles.searchText}>
               Where would you like to go?
