@@ -100,7 +100,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       return;
     }
 
-    const newSocket = io('http://3.110.180.116:3000/', {
+    const newSocket = io('https://t1wfswdh-3000.inc1.devtunnels.ms/', {
       auth: {
         access_token: accessToken,
       },

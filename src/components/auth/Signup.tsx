@@ -265,6 +265,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useMutation} from '@tanstack/react-query';
 import {authSignup} from '../../constants/Api';
 import {useAuthStore} from '../../store/authStore';
+import { ShowToast } from '../../lib/Toast';
 
 const {width} = Dimensions.get('window');
 
@@ -321,6 +322,7 @@ export default function Signup() {
     },
     onError: (error: any) => {
       console.log("register mutation error", error);
+      ShowToast(error.response.data.message, {type: 'error'});
     }
   });
 
@@ -350,14 +352,14 @@ export default function Signup() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
       <ScrollView style={styles.scrollView}>
         <SafeAreaView style={styles.container}>
-          <TouchableOpacity 
+          {/* <TouchableOpacity 
             style={styles.backButton}
             onPress={() => navigation.goBack()}>
             <View style={styles.backRow}>
               <Ionicons name="chevron-back" size={20} color={White} />
               <Text style={styles.backText}>Back</Text>
             </View>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           {/* Logo and Header Section */}
           <View style={styles.headerContainer}>

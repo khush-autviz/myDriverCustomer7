@@ -56,11 +56,11 @@ export default function Home() {
             <Text style={styles.greeting}>Hello there,</Text>
             <Text style={styles.userName}>{user?.firstName}</Text>
           </View>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+          {/* <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
             <View style={styles.profileIcon}>
               <Ionicons name="person" size={24} color={Gold} />
             </View>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* Search Bar */}

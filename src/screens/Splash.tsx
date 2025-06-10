@@ -21,6 +21,8 @@ const Splash = ({ navigation }: {navigation: any}) => {
   })
 
   console.log("userDetails", userDetails)
+  console.log("token", token?.access_token)
+  console.log("userDetails?.data?.data?.registrationComplete", userDetails?.data?.data?.registrationComplete)
   
   useEffect(() => {
     const checkAuthAndOnboarding = async () => {
@@ -31,7 +33,10 @@ const Splash = ({ navigation }: {navigation: any}) => {
       setTimeout(() => {
         if (token && token.access_token) {
           // If token exists, navigate to Main tabs
-          if(userDetails?.data?.data?.currentRide){
+          if(!userDetails?.data?.data?.registrationComplete){
+            navigation.replace('Signup', {mobileNumber: userDetails?.data?.data?.phone});
+          }
+          else if(userDetails?.data?.data?.currentRide){
             setRideId(userDetails?.data?.data?.currentRide)
             navigation.replace('TripDetails');
           } else {

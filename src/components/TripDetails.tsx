@@ -278,7 +278,7 @@ export default function TripDetails() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Black }}>
       <GestureHandlerRootView style={styles.container}>
-        { (mode === 'searchingDriver' || mode === 'booking' || mode === 'noDriversFound') && (
+        { ( mode === 'booking' || mode === 'noDriversFound') && (
         <TouchableOpacity
           style={{
             position: 'absolute',
@@ -521,230 +521,200 @@ export default function TripDetails() {
 
             {(mode === 'accepted' || mode === 'arrived') && (
               <View style={{ flex: 1 }}>
-                {/* <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-                  <TouchableOpacity onPress={() => setmode('second')}>
-                    <Ionicons name='chevron-back' size={24} color={Gold} />
-                  </TouchableOpacity>
-                  <Text style={{ color: Gold, fontSize: 24, fontWeight: '600', marginLeft: 10 }}>
-                    Trip Details
-                  </Text>
-                </View> */}
-
                 <ScrollView
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={{ paddingBottom: 20 }}
                 >
-                  {/* Driver Details Card */}
-                  <View style={{
-                    borderColor: Gold,
-                    borderWidth: 1,
-                    padding: 16,
-                    borderRadius: 16,
-                    marginBottom: 15,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)'
-                  }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, justifyContent: 'space-between' }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <View style={{
-                          width: 24,
-                          height: 24,
-                          borderRadius: 24,
-                          backgroundColor: 'rgba(255, 215, 0, 0.2)',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginRight: 12
-                        }}>
-                          <Ionicons name="person" size={20} color={Gold} />
-                        </View>
-                        <Text style={{ color: Gold, fontSize: 16, fontWeight: '600' }}>
+
+                 {/* Driver Details Card */}
+                 <View style={styles.driverCard}>
+                    <View style={styles.driverHeader}>
+                      {/* <View style={styles.driverAvatarContainer}>
+                        <Ionicons name="person" size={24} color={Gold} />
+                      </View> */}
+                      <View style={styles.driverInfo}>
+                        <Text style={styles.driverName}>
                           {rideInfo?.data?.data?.ride?.driver?.firstName ?? driverDetails?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName ?? driverDetails?.lastName}
                         </Text>
+                        {/* <View style={styles.driverMeta}>
+                          <Ionicons name="star" size={14} color={Gold} />
+                          <Text style={styles.driverRating}>4.8</Text>
+                        </View> */}
                       </View>
                       {rideOtp && (
-                        <View style={{ backgroundColor: 'rgba(255, 107, 107, 0.4)', padding: 5, borderRadius: 10, marginLeft: 20, }}>
-                          <Text style={{ color: LightGold, fontSize: 16, fontWeight: '500' }}>
-                            OTP:  {rideOtp}
-                          </Text>
+                        <View style={styles.otpBadge}>
+                          <Text style={styles.otpBadgeText}>OTP: {rideOtp}</Text>
                         </View>
                       )}
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                      <Ionicons name="car" size={20} color={Gold} style={{ marginRight: 8 }} />
-                      <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
-                        {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand ?? driverDetails?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model ?? driverDetails?.vehicleDetails?.model} • {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.licensePlate ?? driverDetails?.vehicleDetails?.licensePlate}
-                      </Text>
-                    </View> 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                      <Ionicons name="call" size={20} color={Gold} style={{ marginRight: 8 }} />
-                      <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
-                        {rideInfo?.data?.data?.ride?.driver?.phone ?? driverDetails?.phone}
-                      </Text>
+                    <View style={styles.vehicleInfo}>
+                      <View style={styles.vehicleDetail}>
+                        <Ionicons name="car" size={18} color={Gold} />
+                        <Text style={styles.vehicleText}>
+                          {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand ?? driverDetails?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model ?? driverDetails?.vehicleDetails?.model}
+                        </Text>
+                      {/* </View>
+                      <View style={styles.vehicleDetail}> */}
+                        {/* <Ionicons name="information-circle" size={18} color={Gold} /> */}
+                        {/* <Text style={{color: Gold, fontSize: 14, fontWeight: '500'}}>•</Text> */}
+                        <Text style={styles.vehicleText}>
+                          {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.licensePlate ?? driverDetails?.vehicleDetails?.licensePlate}
+                        </Text>
+                      </View>
+                      <TouchableOpacity style={styles.vehicleDetail}>
+                        <Ionicons name="call" size={18} color={Gold} />
+                        <Text style={styles.vehicleText}>
+                          {rideInfo?.data?.data?.ride?.driver?.phone ?? driverDetails?.phone}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  
+                  {/* Trip Route Card */}
+                  <View style={styles.routeCard}>
+                    {/* <View style={styles.routeHeader}>
+                      <Ionicons name="navigate" size={20} color={Gold} />
+                      <Text style={styles.routeHeaderText}>Trip Route</Text>
+                    </View> */}
+                    
+                    {/* Pickup Location */}
+                    <View style={styles.locationRow}>
+                      {/* <View style={styles.locationDot}>
+                        <View style={styles.pickupDot} />
+                      </View> */}
+                      <View style={styles.locationContent}>
+                        <Text style={styles.locationLabel}>PICKUP</Text>
+                        <Text style={styles.locationAddress}>{rideInfo?.data?.data?.ride?.pickupLocation?.address}</Text>
+                      </View>
+                    </View>
+
+                    {/* Route Line */}
+                    <View style={styles.routeLine} />
+
+                    {/* Destination Location */}
+                    <View style={styles.locationRow}>
+                      {/* <View style={styles.locationDot}>
+                        <View style={styles.destinationDot} />
+                      </View> */}
+                      <View style={styles.locationContent}>
+                        <Text style={styles.locationLabel}>DESTINATION</Text>
+                        <Text style={styles.locationAddress}>{rideInfo?.data?.data?.ride?.destination?.address}</Text>
+                      </View>
                     </View>
                   </View>
 
-                  {/* Ride Status */}
-                  {/* <TouchableOpacity style={{
-                    backgroundColor: Gold,
-                    padding: 16,
-                    borderRadius: 8,
-                    marginBottom: 15,
-                    alignItems: 'center'
-                  }}>
-                    <Text style={{ color: Black, fontSize: 18, fontWeight: '600' }}>
-                      {rideInfo?.data?.data?.ride?.status?.toUpperCase()}
-                    </Text>
-                  </TouchableOpacity> */}
 
-                  {/* Location Details */}
-                  <View style={{
-                    borderColor: Gold,
-                    borderWidth: 1,
-                    padding: 16,
-                    borderRadius: 16,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    marginBottom: 15
-                  }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
-                      <View style={{ marginRight: 12, marginTop: 4 }}>
-                        <Ionicons name="location" size={20} color="green" />
+                  {mode === 'arrived' && rideOtp && (
+                    <View style={styles.otpVerificationCard}>
+                      <View style={styles.otpCardHeader}>
+                        <Ionicons name="keypad" size={20} color={Gold} />
+                        <Text style={styles.otpCardTitle}>Ready to Start</Text>
                       </View>
-                      <Text style={{ color: LightGold, fontSize: 14, flex: 1, lineHeight: 22 }}>
-                        {rideInfo?.data?.data?.ride?.pickupLocation?.address}
-                      </Text>
-                    </View>
-
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                      <View style={{ marginRight: 12, marginTop: 4 }}>
-                        <Ionicons name="location" size={20} color="red" />
+                      <Text style={styles.otpCardSubtext}>Share the OTP with your driver to begin the trip</Text>
+                      <View style={styles.otpDisplayContainer}>
+                        <Text style={styles.otpDisplayText}>{rideOtp}</Text>
                       </View>
-                      <Text style={{ color: LightGold, fontSize: 14, flex: 1, lineHeight: 22 }}>
-                        {rideInfo?.data?.data?.ride?.destination?.address}
-                      </Text>
                     </View>
-                  </View>
+                  )}
                 </ScrollView>
 
-                {/* Cancel Button */}
+                {/* Action Button */}
                 <TouchableOpacity
-                  style={{
-                    backgroundColor: '#8B3A3A',
-                    borderRadius: 8,
-                    padding: 16,
-                    marginTop: 'auto',
-                    marginBottom: 20
-                  }}
+                  style={styles.cancelRideButton}
+                  activeOpacity={0.8}
                   onPress={() => setmodalVisible(true)}
                 >
-                  <Text style={{
-                    color: White,
-                    fontSize: 18,
-                    fontWeight: '600',
-                    textAlign: 'center',
-                  }}>
-                    Cancel Ride
-                  </Text>
+                  {/* <Ionicons name="close-circle" size={20} color={White} style={styles.buttonIcon} /> */}
+                  <Text style={styles.cancelRideButtonText}>Cancel Ride</Text>
                 </TouchableOpacity>
               </View>
             )}
             {(mode === 'otp_verified' || mode === 'in_progress') && (
               <View style={{ flex: 1 }}>
-                {/* <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-                <TouchableOpacity onPress={() => setmode('second')}>
-                  <Ionicons name='chevron-back' size={24} color={Gold} />
-                </TouchableOpacity>
-                <Text style={{ color: Gold, fontSize: 24, fontWeight: '600', marginLeft: 10 }}>
-                  Trip Details
-                </Text>
-              </View> */}
-
                 <ScrollView
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={{ paddingBottom: 20 }}
                 >
-                <View style={styles.tripStatusContainer}>
-                    <View style={styles.statusItem}>
-                      <Ionicons name="time-outline" size={20} color={Gold} />
-                      <Text style={styles.statusText}>Trip in progress</Text>
+                  {/* Live Trip Status */}
+                  <View style={styles.liveStatusCard}>
+                    <View style={styles.liveStatusHeader}>
+                      <View style={styles.pulsingDot} />
+                      <Text style={styles.liveStatusText}>LIVE TRIP</Text>
                     </View>
+                    <View style={styles.tripMetrics}>
+                      <View style={styles.metricItem}>
+                        {/* <Ionicons name="time" size={18} color={Gold} /> */}
+                        {/* <View> */}
+                          <Text style={styles.metricLabel}>Fare</Text>
+                          <Text style={styles.metricValue}>${rideInfo?.data?.data?.ride?.fare.toFixed(2)}</Text>
+                        {/* </View> */}
+                      </View>
+                      <View style={styles.metricDivider} />
+                      <View style={styles.metricItem}>
+                        {/* <Ionicons name="speedometer" size={18} color={Gold} /> */}
+                        {/* <View> */}
+                          <Text style={styles.metricLabel}>Distance</Text>
+                          <Text style={styles.metricValue}>{rideInfo?.data?.data?.ride?.distance.toFixed(2)} km</Text>
+                        {/* </View> */}
+                      </View>
+                    </View>
+                    {/* Destination Card */}
+                  {/* <View style={styles.destinationCard}> */}
+                    <View style={styles.destinationHeader}>
+                      {/* <Ionicons name="flag" size={20} color={Gold} /> */}
+                      <Text style={styles.destinationHeaderText}>Destination</Text>
+                    </View>
+                    <Text style={styles.destinationAddress}>{rideInfo?.data?.data?.ride?.destination?.address}</Text>
+                    {/* <View style={styles.destinationMeta}>
+                      <View style={styles.fareInfo}>
+                        <Ionicons name="cash" size={16} color={Gold} />
+                        <Text style={styles.destinationFare}>Estimated Fare: $25.50</Text>
+                      </View>
+                    </View> */}
                   </View>
+                  {/* </View> */}
+
                   {/* Driver Details Card */}
-                  <View style={{
-                    borderColor: Gold,
-                    borderWidth: 1,
-                    padding: 16,
-                    borderRadius: 16,
-                    marginBottom: 15,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)'
-                  }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, justifyContent: 'space-between' }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <View style={{
-                          width: 24,
-                          height: 24,
-                          borderRadius: 24,
-                          backgroundColor: 'rgba(255, 215, 0, 0.2)',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginRight: 12
-                        }}>
-                          <Ionicons name="person" size={20} color={Gold} />
-                        </View>
-                        <Text style={{ color: Gold, fontSize: 16, fontWeight: '600' }}>
+                  <View style={styles.driverCard}>
+                    <View style={styles.driverHeader}>
+                      {/* <View style={styles.driverAvatarContainer}>
+                        <Ionicons name="person" size={24} color={Gold} />
+                      </View> */}
+                      <View style={styles.driverInfo}>
+                        <Text style={styles.driverName}>
                           {rideInfo?.data?.data?.ride?.driver?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName}
                         </Text>
+                        {/* <View style={styles.driverMeta}>
+                          <Ionicons name="star" size={14} color={Gold} />
+                          <Text style={styles.driverRating}>4.8</Text>
+                        </View> */}
                       </View>
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                      <Ionicons name="car" size={20} color={Gold} style={{ marginRight: 8 }} />
-                      <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
-                        {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model} • {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.licensePlate}
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                      <Ionicons name="call" size={20} color={Gold} style={{ marginRight: 8 }} />
-                      <Text style={{ color: Gold, fontSize: 14, fontWeight: '500' }}>
-                        {rideInfo?.data?.data?.ride?.driver?.phone}
-                      </Text>
+                    <View style={styles.vehicleInfo}>
+                      <View style={styles.vehicleDetail}>
+                        <Ionicons name="car" size={18} color={Gold} />
+                        <Text style={styles.vehicleText}>
+                          {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model}
+                        </Text>
+                      {/* </View>
+                      <View style={styles.vehicleDetail}>
+                        <Ionicons name="information-circle" size={18} color={Gold} /> */}
+                        <Text style={styles.vehicleText}>
+                          {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.licensePlate}
+                        </Text>
+                      </View>
+                      <TouchableOpacity style={styles.vehicleDetail}>
+                        <Ionicons name="call" size={18} color={Gold} />
+                        <Text style={styles.vehicleText}>
+                          {rideInfo?.data?.data?.ride?.driver?.phone}
+                        </Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
 
-                  {/* Location Details */}
-                  <View style={{
-                    borderColor: Gold,
-                    borderWidth: 1,
-                    padding: 16,
-                    borderRadius: 16,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    marginBottom: 15
-                  }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
-                      <View style={{ marginRight: 12, marginTop: 4 }}>
-                        <Ionicons name="location" size={20} color="green" />
-                      </View>
-                      <Text style={{ color: LightGold, fontSize: 14, flex: 1, lineHeight: 22 }}>
-                        {rideInfo?.data?.data?.ride?.pickupLocation?.address}
-                      </Text>
-                    </View>
-
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                      <View style={{ marginRight: 12, marginTop: 4 }}>
-                        <Ionicons name="location" size={20} color="red" />
-                      </View>
-                      <Text style={{ color: LightGold, fontSize: 14, flex: 1, lineHeight: 22 }}>
-                        {rideInfo?.data?.data?.ride?.destination?.address}
-                      </Text>
-                    </View>
-                  </View>
-                  {/* <View style={styles.tripStatusContainer}>
-                    <View style={styles.statusItem}>
-                      <Ionicons name="time-outline" size={20} color={Gold} />
-                      <Text style={styles.statusText}>Trip in progress</Text>
-                    </View>
-                  </View> */}
                 </ScrollView>
-
               </View>
             )}
           </BottomSheetView>
@@ -810,7 +780,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   reasonsList: {
-    paddingBottom: 8,
+    // paddingBottom: 8,
   },
   reasonButton: {
     flexDirection: 'row',
@@ -835,7 +805,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    marginTop: 10
+    // marginTop: 10
   },
   cancelButtonText: {
     color: White,
@@ -937,6 +907,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
+  buttonIcon: {
+    marginRight: 8,
+  },
+
   tripStatusContainer: {
     // marginTop: 10,
     marginBottom: 10,
@@ -954,5 +928,241 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 10,
     fontWeight: '500',
+  },
+
+  routeCard: {
+    borderColor: Gold,
+    borderWidth: 2,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  routeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  routeHeaderText: {
+    color: Gold,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  locationDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Gold,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pickupDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: White,
+  },
+  destinationDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Gold,
+  },
+  locationContent: {
+    flex: 1,
+  },
+  locationLabel: {
+    color: Gold,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  locationAddress: {
+    color: LightGold,
+    fontSize: 12,
+  },
+  routeLine: {
+    height: 2,
+    backgroundColor: Gold,
+    marginVertical: 10,
+  },
+
+  driverCard: {
+    borderColor: Gold,
+    borderWidth: 2,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  driverHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    // marginBottom: 12,
+  },
+  driverAvatarContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Gold,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  driverInfo: {
+    flex: 1,
+  },
+  driverName: {
+    color: Gold,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  driverMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  driverRating: {
+    color: Gold,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  otpBadge: {
+    backgroundColor: 'rgba(255, 107, 107, 0.4)',
+    padding: 5,
+    borderRadius: 10,
+    marginLeft: 20,
+  },
+  otpBadgeText: {
+    color: LightGold,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  vehicleInfo: {
+    marginTop: 12,
+  },
+  vehicleDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  vehicleText: {
+    color: LightGold,
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  otpVerificationCard: {
+    borderColor: Gold,
+    borderWidth: 2,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  otpCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  otpCardTitle: {
+    color: Gold,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  otpCardSubtext: {
+    color: LightGold,
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  otpDisplayContainer: {
+    backgroundColor: Gold,
+    padding: 10,
+    borderRadius: 8,
+  },
+  otpDisplayText: {
+    color: White,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  liveStatusCard: {
+    borderColor: Gold,
+    borderWidth: 2,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  liveStatusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  pulsingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'green',
+    marginRight: 8,
+  },
+  liveStatusText: {
+    color: Gold,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  tripMetrics: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  metricItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  metricLabel: {
+    color: Gold,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  metricValue: {
+    color: Gold,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  metricDivider: {
+    width: 2,
+    height: 20,
+    backgroundColor: Gold,
+  },
+  destinationCard: {
+    borderColor: Gold,
+    borderWidth: 2,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  destinationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    marginTop: 20,
+  },
+  destinationHeaderText: {
+    color: Gold,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  destinationAddress: {
+    color: LightGold,
+    fontSize: 14,
+  },
+  destinationMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  fareInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  destinationFare: {
+    color: Gold,
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

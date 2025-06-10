@@ -145,10 +145,11 @@ export default function OtpScreen() {
   const verifyOtpMutation = useMutation({
     mutationFn: verifyOtp,
     onSuccess: (response) => {
+      console.log("verify otp mutation success", response);
       setIsLoading(false);
-      if (response.data.data.user.registrationComplete) {
-        SETTOKEN({access_token: response.data.data.access_token, refresh_token: response.data.data.refresh_token});
+      SETTOKEN({access_token: response.data.data.access_token, refresh_token: response.data.data.refresh_token});
         SETUSER(response.data.data.user);
+      if (response.data.data.user.registrationComplete) {
         navigation.reset({
           index: 0,
           routes: [{name: 'Main'}],
@@ -272,7 +273,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginTop: 10,
-    marginBottom: 10,
+    // marginBottom: 10,
   },
   backRow: {
     flexDirection: 'row',
@@ -290,19 +291,19 @@ const styles = StyleSheet.create({
   logo: {
     height: 80,
     width: width * 0.6,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   header: {
     color: LightGold,
     fontSize: 28,
     fontWeight: '700',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   subText: {
     color: Gray,
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 35,
     maxWidth: '80%',
   },
   otpContainer: {

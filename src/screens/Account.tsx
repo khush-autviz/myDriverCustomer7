@@ -153,15 +153,15 @@ export default function Account() {
                   {item.label}
                 </Text>
               </View>            
-              {item.badge && (
+              {/* {item?.badge && (
                 <View style={styles.badgeContainer}>
-                  <Text style={styles.badgeText}>{item.badgeCount}</Text>
+                  <Text style={styles.badgeText}>{item?.badgeCount ?? 0}</Text>
                 </View>
               )}
               
-              {!item.badge && !item.danger && (
+              {!item?.badge && !item.danger && (
                 <Ionicons name="chevron-forward" size={18} color={Gray} />
-              )}
+              )} */}
             </TouchableOpacity>
           ))}
         </View>
