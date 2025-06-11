@@ -21,7 +21,7 @@ export default function Profile() {
     firstName: '',
     lastName: '',
     email: '',
-    profileImage: null
+    // profileImage: null
   })
 
 
@@ -110,24 +110,24 @@ export default function Profile() {
     formData.append('email', data.email.trim())
 
     // Append profile photo if available and changed
-    if (data.profileImage && !data.profileImage.startsWith('http')) {
-      const photoName = data.profileImage.split('/').pop() || 'profile.jpg'
-      const photoType = photoName.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg'
+    // if (data.profileImage && !data.profileImage.startsWith('http')) {
+    //   const photoName = data.profileImage.split('/').pop() || 'profile.jpg'
+    //   const photoType = photoName.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg'
 
-      const photoFile = {
-        uri: Platform.OS === 'android' ? data.profileImage : data.profileImage.replace('file://', ''),
-        type: photoType,
-        name: photoName,
-      }
-      formData.append('profileImage', photoFile as any)
+    //   const photoFile = {
+    //     uri: Platform.OS === 'android' ? data.profileImage : data.profileImage.replace('file://', ''),
+    //     type: photoType,
+    //     name: photoName,
+    //   }
+    //   formData.append('profileImage', photoFile as any)
 
-      // Log the photo file details separately
-      console.log('Photo file details:', {
-        uri: photoFile.uri,
-        type: photoType,
-        name: photoName
-      })
-    }
+    //   // Log the photo file details separately
+    //   console.log('Photo file details:', {
+    //     uri: photoFile.uri,
+    //     type: photoType,
+    //     name: photoName
+    //   })
+    // }
 
     // Log form data contents
     console.log('Form data being sent:', formData)
@@ -145,7 +145,7 @@ export default function Profile() {
         firstName: UserDetails?.data?.data?.firstName,
         lastName: UserDetails?.data?.data?.lastName,
         email: UserDetails?.data?.data?.email,
-        profileImage: UserDetails?.data?.data?.profileImage,
+        // profileImage: UserDetails?.data?.data?.profileImage,
       })
     }
 

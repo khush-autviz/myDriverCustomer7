@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyBcKgyA7urR7gHyen79h40UlkvTJJoKc9I';
@@ -16,6 +16,7 @@ interface Props {
   setActive?: () => void;
   initialValue?: string;
   editable?: boolean;
+  setLoading?: (loading: boolean) => void;
 }
 
 const PlacesSearch = forwardRef(({
@@ -24,21 +25,28 @@ const PlacesSearch = forwardRef(({
   setSuggestions,
   setActive,
   initialValue = '',
-  editable = true
+  editable = true,
+  setLoading
 }: Props, ref) => {
   const [query, setQuery] = useState(initialValue);
   const [selectedDescription, setSelectedDescription] = useState(initialValue);
+  const [isLoading, setIsLoading] = useState(false);
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const fetchAutocomplete = async (input: string) => {
     if (!input) {
       setSuggestions?.([]);
+      setIsLoading(false);
+      setLoading?.(false);
       return;
     }
 
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
+
+    setIsLoading(true);
+    setLoading?.(true);
 
     timeoutRef.current = setTimeout(async () => {
       try {
@@ -61,11 +69,17 @@ const PlacesSearch = forwardRef(({
       } catch (err) {
         console.error('Autocomplete error:', err);
         setSuggestions?.([]);
+      } finally {
+        setIsLoading(false);
+        setLoading?.(false);
       }
     }, 300); // Debounce for 300ms
   };
 
   const fetchPlaceDetails = async (placeId: string, description: string) => {
+    setIsLoading(true);
+    setLoading?.(true);
+    
     try {
       const res = await axios.get(
         'https://maps.googleapis.com/maps/api/place/details/json',
@@ -87,6 +101,9 @@ const PlacesSearch = forwardRef(({
       }
     } catch (err) {
       console.error('Place details error:', err);
+    } finally {
+      setIsLoading(false);
+      setLoading?.(false);
     }
   };
 
@@ -120,16 +137,23 @@ const PlacesSearch = forwardRef(({
 
   return (
     <View style={styles.container}>
-      <TextInput
-        value={query}
-        placeholder={placeholder}
-        placeholderTextColor="#999"
-        style={[styles.input, !editable && styles.disabledInput]}
-        onChangeText={handleChangeText}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        editable={editable}
-      />
+      <View style={styles.inputContainer}>
+        <TextInput
+          value={query}
+          placeholder={placeholder}
+          placeholderTextColor="#999"
+          style={[styles.input, !editable && styles.disabledInput]}
+          onChangeText={handleChangeText}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          editable={editable}
+        />
+        {isLoading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color="#FFD700" />
+          </View>
+        )}
+      </View>
     </View>
   );
 });
@@ -140,7 +164,12 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
   },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   input: {
+    flex: 1,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     paddingVertical: 8,
@@ -149,5 +178,11 @@ const styles = StyleSheet.create({
   disabledInput: {
     color: '#999',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  loadingContainer: {
+    position: 'absolute',
+    right: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

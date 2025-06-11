@@ -5,6 +5,7 @@ import {
   Alert,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import React, { useRef, useState, useContext, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -31,6 +32,7 @@ export default function Location() {
   const [activeType, setActiveType] = useState<'pickup' | 'drop' | null>(null);
   const [currentLocationAddress, setCurrentLocationAddress] = useState('Current Location');
   const [isCurrentLocation, setIsCurrentLocation] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Create separate refs for pickup and drop inputs
   const pickupSearchRef = useRef<any>(null);
@@ -126,6 +128,7 @@ export default function Location() {
             onPlaceSelected={handleSelect}
             setSuggestions={setSuggestions}
             setActive={() => setActiveType('pickup')}
+            setLoading={setIsSearching}
             editable={true}
           />
 
@@ -136,63 +139,71 @@ export default function Location() {
             onPlaceSelected={handleSelect}
             setSuggestions={setSuggestions}
             setActive={() => setActiveType('drop')}
+            setLoading={setIsSearching}
             editable={true}
           />
         </View>
       </View>
 
       {/* Suggestions */}
-      {suggestions.length > 0 && (
+      {(suggestions.length > 0 || isSearching) && activeType && (
         <View style={styles.suggestionBox}>
-          <FlatList
-            data={[
-              // Add "Use Current Location" option when searching for pickup
-              ...(activeType === 'pickup' ? [{
-                description: 'Use Current Location',
-                place_id: 'current_location'
-              }] : []),
-              ...suggestions
-            ]}
-            keyExtractor={(item) => item.place_id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[
-                  styles.suggestionItem,
-                  item.place_id === 'current_location' && styles.currentLocationItem
-                ]}
-                onPress={() => {
-                  if (item.place_id === 'current_location') {
-                    // Handle current location selection
-                    if (location) {
-                      setPickupLocation({ 
-                        lat: location.latitude, 
-                        lng: location.longitude, 
-                        description: 'Current Location' 
-                      });
-                      setCurrentLocationAddress('Current Location');
-                      setIsCurrentLocation(true);
-                      setPickupSelected(true);
-                      setActiveType(null);
-                      setSuggestions([]);
+          {isSearching ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={Gold} />
+              <Text style={styles.loadingText}>Searching places...</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={[
+                // Add "Use Current Location" option when searching for pickup
+                ...(activeType === 'pickup' ? [{
+                  description: 'Use Current Location',
+                  place_id: 'current_location'
+                }] : []),
+                ...suggestions
+              ]}
+              keyExtractor={(item) => item.place_id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.suggestionItem,
+                    item.place_id === 'current_location' && styles.currentLocationItem
+                  ]}
+                  onPress={() => {
+                    if (item.place_id === 'current_location') {
+                      // Handle current location selection
+                      if (location) {
+                        setPickupLocation({ 
+                          lat: location.latitude, 
+                          lng: location.longitude, 
+                          description: 'Current Location' 
+                        });
+                        setCurrentLocationAddress('Current Location');
+                        setIsCurrentLocation(true);
+                        setPickupSelected(true);
+                        setActiveType(null);
+                        setSuggestions([]);
+                      }
+                    } else {
+                      handleSuggestionSelect(item.place_id, item.description);
                     }
-                  } else {
-                    handleSuggestionSelect(item.place_id, item.description);
-                  }
-                }}>
-                <View style={styles.suggestionContent}>
-                  {item.place_id === 'current_location' && (
-                    <Ionicons name="location" size={18} color={Gold} style={styles.suggestionIcon} />
-                  )}
-                  <Text style={[
-                    styles.suggestionText,
-                    item.place_id === 'current_location' && styles.currentLocationText
-                  ]}>
-                    {item.description}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            )}
-          />
+                  }}>
+                  <View style={styles.suggestionContent}>
+                    {item.place_id === 'current_location' && (
+                      <Ionicons name="location" size={18} color={Gold} style={styles.suggestionIcon} />
+                    )}
+                    <Text style={[
+                      styles.suggestionText,
+                      item.place_id === 'current_location' && styles.currentLocationText
+                    ]}>
+                      {item.description}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          )}
         </View>
       )}
     </View>
@@ -261,5 +272,16 @@ const styles = StyleSheet.create({
   },
   suggestionIcon: {
     marginRight: 5,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+  },
+  loadingText: {
+    color: Gold,
+    fontSize: 14,
+    marginLeft: 10,
   },
 });

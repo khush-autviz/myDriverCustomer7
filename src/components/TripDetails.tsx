@@ -357,6 +357,7 @@ export default function TripDetails() {
         <MapView
           style={styles.map}
           showsCompass={false}
+          provider='google'
           initialRegion={{
             // latitude: location?.latitude,
             // longitude: location?.longitude,

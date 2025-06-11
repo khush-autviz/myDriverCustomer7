@@ -34,6 +34,7 @@ import React, {
   
     const requestPermission = async (): Promise<boolean> => {
       if (Platform.OS === 'ios') {
+        await Geolocation.requestAuthorization('whenInUse');
         return true; // iOS handles permission automatically
       }
   
