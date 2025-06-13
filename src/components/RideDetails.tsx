@@ -33,7 +33,7 @@ export default function RideDetails() {
       {/* Status and Date */}
       <View style={styles.section}>
         <View style={styles.statusContainer}>
-          <Text style={styles.status}>{ride.status.toUpperCase()}</Text>
+          <Text style={[styles.status, {color: ride?.status === 'completed' ? '#4CAF50' : '#F44336'}]}>{ride.status.toUpperCase()}</Text>
           {/* <Text style={styles.date}>{(ride.createdAt)}</Text> */}
           <Text style={styles.date}>{new Date(ride.createdAt).toLocaleDateString('en-US', {
             month: 'short',
@@ -60,7 +60,7 @@ export default function RideDetails() {
           </View>
           {/* <View style={styles.locationDivider} /> */}
           <View style={styles.locationItem}>
-            <Ionicons name="location" size={24} color="red" />
+            <Ionicons name="location" size={24} color="#F44336" />
             <View style={styles.locationText}>
               <Text style={styles.locationLabel}>Drop-off</Text>
               <Text style={styles.locationAddress}>{ride.destination.address}</Text>
@@ -70,25 +70,27 @@ export default function RideDetails() {
       </View>
 
       {/* Driver Details */}
+      {ride?.driver && (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Driver Details</Text>
         <View style={styles.driverContainer}>
           <View style={styles.driverInfo}>
             <Text style={styles.driverName}>
-              {ride.driver.firstName} {ride.driver.lastName}
+              {ride?.driver?.firstName} {ride?.driver?.lastName}
             </Text>
             <Text style={styles.vehicleInfo}>
-              {ride.driver.vehicleDetails.brand} {ride.driver.vehicleDetails.model} • {ride.driver.vehicleDetails.color}
+              {ride?.driver?.vehicleDetails?.brand} {ride?.driver?.vehicleDetails?.model} • {ride?.driver?.vehicleDetails?.color}
             </Text>
             <Text style={styles.licensePlate}>
-              {ride.driver.vehicleDetails.licensePlate}
+              {ride?.driver?.vehicleDetails?.licensePlate}
             </Text>
           </View>
-          {/* <TouchableOpacity style={styles.phoneButton}>
-            <Ionicons name="call" size={20} color={Gold} />
-          </TouchableOpacity> */}
+          <View style={styles.driverInfo}>
+            <Text style={styles.driverPhone}>{ride?.driver?.phone}</Text>
+          </View>
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Fare Details */}
       <View style={styles.section}>
@@ -160,7 +162,7 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   status: {
-    color: Gold,
+    // color: ride?.status === 'completed' ? 'green' : 'red'  ,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -213,6 +215,11 @@ const styles = StyleSheet.create({
   driverName: {
     color: White,
     fontSize: 16,
+    fontWeight: '600',
+  },
+  driverPhone: {
+    color: Gold,
+    fontSize: 14,
     fontWeight: '600',
   },
   vehicleInfo: {

@@ -106,7 +106,7 @@ export default function Activity() {
         <Text style={styles.amountText}>${item.fare.toFixed(2) || '0.00'}</Text>
         <View style={styles.statusContainer}>
           <View style={[styles.statusDot, { 
-            backgroundColor: item.status === 'completed' ? '#4CAF50' : Gold 
+            backgroundColor: item.status === 'completed' ? '#4CAF50' : item.status === 'cancelled' ? '#F44336' : Gold 
           }]} />
           <Text style={styles.statusText}>{item.status || 'Unknown'}</Text>
         </View>

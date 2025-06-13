@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -26,7 +27,7 @@ export default function OtpScreen() {
   const navigation: any = useNavigation();
   const SETUSER = useAuthStore(state => state.setUser);
   const SETTOKEN = useAuthStore(state => state.setToken);
-  const [isLoading, setIsLoading] = useState(false);
+
 
   const handleOtpChange = (text: string) => {
     // Only allow numbers and limit to 4 digits
@@ -38,7 +39,6 @@ export default function OtpScreen() {
     mutationFn: verifyOtp,
     onSuccess: (response) => {
       console.log("verify otp mutation success", response);
-      setIsLoading(false);
       SETTOKEN({access_token: response.data.data.access_token, refresh_token: response.data.data.refresh_token});
         SETUSER(response.data.data.user);
       if (response.data.data.user.registrationComplete) {
@@ -54,7 +54,6 @@ export default function OtpScreen() {
       }
     },
     onError: (error: any) => {
-      setIsLoading(false);
       console.log("verify otp mutation error", error);
       ShowToast(error.response.data.message, {type: 'error'});
     }
@@ -66,7 +65,6 @@ export default function OtpScreen() {
       return;
     }
     
-    setIsLoading(true);
     verifyOtpMutation.mutateAsync({
       phone: mobileNumber,
       otp: otp,
@@ -128,15 +126,11 @@ export default function OtpScreen() {
           // (isLoading || otp.length !== 4) && styles.verifyButtonDisabled
         ]} 
         onPress={handleVerify}
-        disabled={isLoading || otp.length !== 4}
+        disabled={verifyOtpMutation.isPending || otp.length !== 4}
       >
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <View style={styles.loadingDot} />
-            <View style={styles.loadingDot} />
-            <View style={styles.loadingDot} />
-          </View>
-        ) : (
+        {verifyOtpMutation.isPending ? (
+            <ActivityIndicator size="small" color={Black} />
+          ) : (
           <Text style={[
             styles.verifyText,
             (otp.length !== 4) && styles.verifyTextDisabled

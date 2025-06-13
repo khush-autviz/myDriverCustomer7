@@ -40,25 +40,6 @@ export default function Home() {
     navigation.navigate('Location');
   }
 
-  const logAllLocalStorage = async () => {
-    try {
-      const allKeys = await AsyncStorage.getAllKeys();
-      const allItems = await AsyncStorage.multiGet(allKeys);
-
-      console.log('📦 AsyncStorage contents:');
-      allItems.forEach(([key, value]) => {
-        console.log(`${key}:`, value);
-      });
-    } catch (error) {
-      console.error('❌ Error reading AsyncStorage:', error);
-    }
-  };
-
-  // Call this function wherever appropriate
-  useEffect(() => {
-    logAllLocalStorage();
-  }, []);
-
 
   return (
     <>

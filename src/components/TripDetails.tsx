@@ -83,8 +83,9 @@ export default function TripDetails() {
       console.log('ride price success', response);
       setridePrices(response.data.data.priceEstimates)
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.log('ride price error', error);
+      ShowToast(error?.response?.data?.message || error?.message || 'Failed to calculate ride price', { type: 'error' });
     },
   })
 
@@ -97,9 +98,9 @@ export default function TripDetails() {
       // setrideDetails(response.data.data.ride)
       setmode('searchingDriver')
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.log('ride created error', error);
-      ShowToast(error.message, { type: 'error' });
+      ShowToast(error?.response?.data?.message || error?.message || 'Failed to create ride', { type: 'error' });
     },
   })
 
@@ -112,9 +113,9 @@ export default function TripDetails() {
       setRideId(null)
       navigation.navigate('Main')
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.log('ride cancelled error', error);
-      ShowToast(error.message, { type: 'error' });
+      ShowToast(error?.response?.data?.message || error?.message || 'Failed to cancel ride', { type: 'error' });
     },
   })
 
