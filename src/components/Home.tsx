@@ -28,7 +28,7 @@ export default function Home() {
   const { user } = useAuthStore()
   const { location } = useLocation()
 
-  console.log('location', location);
+  // console.log('location', location);
 
   const handleSearch = () => {
     if (!location) {

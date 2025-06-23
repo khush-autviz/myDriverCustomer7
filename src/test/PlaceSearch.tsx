@@ -2,7 +2,7 @@ import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'rea
 import { View, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyBcKgyA7urR7gHyen79h40UlkvTJJoKc9I';
+const GOOGLE_MAPS_API_KEY = 'AIzaSyDGQZ-LNDI4iv5CyqdU3BX5dl9PaEpOfrQ';
 
 interface Prediction {
   description: string;

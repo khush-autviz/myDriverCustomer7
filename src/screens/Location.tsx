@@ -43,10 +43,11 @@ export default function Location() {
     const fetchCurrentLocation = async () => {
       await getCurrentLocation();
       if (location) {
+        // console.log('current location', location);
         // Reverse geocode to get address from coordinates
         try {
           const response = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=AIzaSyBcKgyA7urR7gHyen79h40UlkvTJJoKc9I`
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=AIzaSyDGQZ-LNDI4iv5CyqdU3BX5dl9PaEpOfrQ`
           );
           const data = await response.json();
           if (data.results && data.results.length > 0) {
@@ -60,10 +61,12 @@ export default function Location() {
             setPickupSelected(true);
             setIsCurrentLocation(true);
             setCurrentLocationAddress('Current Location'); // Keep showing "Current Location"
+            console.log('pickup location set');
           }
         } catch (error) {
+          console.log('error getting address', error);
           console.error('Error getting address:', error);
-          setCurrentLocationAddress('Current Location');
+          setCurrentLocationAddress('Select Location');
         }
       }
     };

@@ -382,7 +382,7 @@ export default function TripDetails() {
           <MapViewDirections
             origin={pickupCoord}
             destination={destinationCoord}
-            apikey='AIzaSyBcKgyA7urR7gHyen79h40UlkvTJJoKc9I'
+            apikey='AIzaSyDGQZ-LNDI4iv5CyqdU3BX5dl9PaEpOfrQ'
             strokeColor={Gold}
             strokeWidth={4}
 
