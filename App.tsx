@@ -1,5 +1,3 @@
-
-
 import 'react-native-reanimated';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
@@ -28,12 +26,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Toast } from './src/lib/Toast';
 import Ratings from './src/components/Ratings';
 import RideDetails from './src/components/RideDetails';
+import WalletRecharge from './src/screens/WalletRecharge';
+import TransactionHistory from './src/screens/TransactionHistory';
 
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: true,
+      retry: 2,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 function MainTabs() {
   return (
@@ -95,6 +103,8 @@ export default function App() {
                 <Stack.Screen name="Profile" component={Profile} />
                 <Stack.Screen name="Ratings" component={Ratings} />
                 <Stack.Screen name="RideDetails" component={RideDetails} />
+                <Stack.Screen name="WalletRecharge" component={WalletRecharge} />
+                <Stack.Screen name="TransactionHistory" component={TransactionHistory} />
                 
                 {/* Main Tabs */}
                 <Stack.Screen name="Main" component={MainTabs} />

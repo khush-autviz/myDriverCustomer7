@@ -70,3 +70,27 @@ export const ratingRide = async (data: any, rideId: any) => {
     const response = await axios.post(`/rating/ride/${rideId}`, data)
     return response
 }
+
+// wallet balance
+export const getWalletBalance = async () => {
+    const response = await axios.get('/wallet/balance')
+    return response
+}
+
+// wallet transaction history
+export const getWalletTransactionHistory = async () => {
+    const response = await axios.get('/wallet/transactions')
+    return response
+}
+
+// wallet topup (create order)
+export const createWalletTopup = async (data: any) => {
+    const response = await axios.post('/wallet/paypal/create-order', data)
+    return response
+}
+
+// wallet (capture order)
+export const captureWalletTopup = async (id: any) => {
+    const response = await axios.post(`/wallet/paypal/capture/${id}`)
+    return response
+}

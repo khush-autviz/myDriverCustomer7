@@ -1,18 +1,44 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, ScrollView } from 'react-native'
-import React from 'react'
+import { StyleSheet, Text, TouchableOpacity, View, Image, ScrollView, ActivityIndicator } from 'react-native'
+import React, { useState, useEffect, useCallback } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Black, DarkGray, Gold, Gray, LightGold, White } from '../constants/Color'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { useAuthStore } from '../store/authStore'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useQuery } from '@tanstack/react-query'
+import { getWalletBalance } from '../constants/Api'
 
 export default function Account() {
   var USER = useAuthStore(state => state.user)
   const LOGOUT = useAuthStore(state => state.logout)
   const navigation: any = useNavigation()
+  const [walletBalance, setWalletBalance] = useState(0)
 
-  console.log('USER', USER);
-  
+  // Fetch wallet balance
+  const { 
+    data: walletData, 
+    isLoading: walletLoading, 
+    error: walletError ,
+    refetch: refetchWalletBalance
+  } = useQuery({
+    queryKey: ['wallet-balance'],
+    queryFn: getWalletBalance,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0, // Always consider data stale to allow refetching
+  });
+
+  useEffect(() => {
+    console.log('Wallet data updated:', walletData?.data?.data?.balance);
+    if (walletData?.data?.data?.balance !== undefined) {
+      setWalletBalance(walletData.data.data.balance);
+    }
+  }, [walletData]);
+
+  const formatCurrency = (amount: number | string) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return `$${numAmount.toFixed(2)}`;
+  };
 
   const handleLogout = () => {
     navigation.reset({
@@ -28,6 +54,12 @@ export default function Account() {
       icon: 'person',
       label: 'Manage Profile',
       onPress: () => navigation.navigate('Profile'),
+      important: true
+    },
+    {
+      icon: 'card',
+      label: 'Transaction History',
+      onPress: () => navigation.navigate('TransactionHistory'),
       important: true
     },
     // {
@@ -67,6 +99,12 @@ export default function Account() {
     }
   ]
 
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Account screen focused - refetching wallet balance');
+      refetchWalletBalance()
+    }, [refetchWalletBalance])
+  )
 
   return (
     <SafeAreaView style={styles.container}>
@@ -105,6 +143,30 @@ export default function Account() {
               <Ionicons name="create-outline" size={14} color={Gold} />
               <Text style={styles.editProfileText}>Edit Profile</Text>
             </TouchableOpacity> */}
+          </View>
+        </View>
+
+        {/* Wallet Card */}
+        <View style={styles.walletCard}>
+          <View style={styles.walletHeader}>
+            <View style={styles.walletIconContainer}>
+              <Ionicons name="wallet-outline" size={20} color={Gold} />
+            </View>
+            <Text style={styles.walletLabel}>Wallet Balance</Text>
+          </View>
+          <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+          <View style={styles.walletBalanceContainer}>
+            {walletLoading ? (
+              <ActivityIndicator size="small" color={Gold} />
+            ) : walletError ? (
+              <Text style={styles.walletErrorText}>Failed to load</Text>
+            ) : (
+              <Text style={styles.walletBalance}>{formatCurrency(walletBalance)}</Text>
+            )}
+          </View>
+          <TouchableOpacity onPress={() => navigation.navigate('WalletRecharge')}>
+            <Ionicons name="add-circle-outline" size={24} color={Gold} />
+          </TouchableOpacity>
           </View>
         </View>
 
@@ -172,7 +234,7 @@ export default function Account() {
         {/* App Info */}
         <View style={styles.appInfoContainer}>
           <Text style={styles.versionText}>Version 1.0.0</Text>
-        </View>
+        </View> 
       </ScrollView>
     </SafeAreaView>
   )
@@ -395,4 +457,43 @@ const styles = StyleSheet.create({
     color: Gray,
     marginHorizontal: 8,
   },
+  walletCard: {
+    backgroundColor: '#222',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+  },
+  walletHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  walletIconContainer: {
+    marginRight: 12,
+  },
+  walletLabel: {
+    color: LightGold,
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  walletBalanceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  walletErrorText: {
+    color: '#FF6B6B',
+    fontSize: 14,
+  },
+  walletBalance: {
+    color: Gold,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  // walletButton: {
+  //   backgroundColor: Gold,
+  //   borderRadius: 16,
+  //   padding: 16,
+  //   marginBottom: 24,
+  // },
 })
