@@ -50,6 +50,10 @@ export default function TransactionHistory() {
     setRefreshing(true);
     try {
       await refetch();
+      // Update transactions when data is refetched
+      if (transactionData?.data?.data?.transactions) {
+        setTransactions(transactionData.data.data.transactions);
+      }
     } catch (error) {
       ShowToast('Failed to refresh transactions', { type: 'error' });
     } finally {
@@ -273,9 +277,6 @@ export default function TransactionHistory() {
     <SafeAreaView style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Gold} />
-        }
       >
         {/* Header */}
         <View style={styles.header}>
@@ -345,7 +346,7 @@ export default function TransactionHistory() {
 
         {/* Transactions List */}
         <View style={styles.transactionsContainer}>
-          <View style={styles.sectionHeader}>
+          {/* <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
               {filter === 'all' ? 'All Transactions' : 
                filter === 'credit' ? 'Credit Transactions' :
@@ -354,7 +355,7 @@ export default function TransactionHistory() {
             <Text style={styles.transactionCount}>
               {filteredTransactions.length} {filteredTransactions.length === 1 ? 'transaction' : 'transactions'}
             </Text>
-          </View>
+          </View> */}
 
           {filteredTransactions.length === 0 ? (
             renderEmptyState()
@@ -365,6 +366,10 @@ export default function TransactionHistory() {
               keyExtractor={(item, index) => item.id || index.toString()}
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
+              
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Gold} />
+              }
             />
           )}
         </View>
@@ -438,7 +443,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    color: LightGold,
+    color: Gold,
     fontSize: 20,
     fontWeight: '700',
   },

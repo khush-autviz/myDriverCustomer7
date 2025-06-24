@@ -1,6 +1,6 @@
-import { View, Text, Image, TouchableOpacity, TextInput, Platform, ActivityIndicator } from 'react-native'
+import { View, Text, Image, TouchableOpacity, TextInput, Platform, ActivityIndicator, ScrollView } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { Black, Gold, Gray, White } from '../constants/Color'
+import { Black, Gold, Gray, White, LightGold } from '../constants/Color'
 import { useAuthStore } from '../store/authStore'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -157,122 +157,234 @@ export default function Profile() {
 
 
   return (
-    <SafeAreaView style={{ paddingHorizontal: 20, flex: 1, backgroundColor: Black }}>
+    <SafeAreaView style={styles.container}>
       {isLoading && <Loader />}
-      <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 20, gap: 10 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} >
-          <Ionicons name="chevron-back" size={24} color={Gold} />
-        </TouchableOpacity>
-        <Text style={{ color: Gold, fontSize: 20, fontWeight: '600' }}>Profile</Text>
-      </View>
-      {/* <View style={{ display: 'flex', alignItems: 'center', marginTop: 40 }}> */}
-        {/* <TouchableOpacity onPress={handleImageUpload}>
-          {data.profileImage ? (
-            <Image
-              // source={{ uri: `https://t1wfswdh-3000.inc1.devtunnels.ms/${data.profileImage}` }}
-              source={{ uri: `http://3.110.180.116:3000/${data.profileImage}` }} 
-              style={{ width: 100, height: 100, borderRadius: 50 }}
-            />
-          ) : ( */}
-            {/* <Image
-              source={require('..//assets/images/user.png')}
-              style={{ width: 100, height: 100, borderRadius: 50 }}
-            /> */}
-          {/* )}
-          <View style={{
-            position: 'absolute',
-            bottom: 0,
-            right: 0,
-            backgroundColor: Gold,
-            borderRadius: 15,
-            padding: 5
-          }}>
-            <Ionicons name="camera" size={20} color={White} />
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="chevron-back" size={24} color={Gold} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={styles.placeholder} />
+        </View>
+
+        {/* Main Content */}
+        <View style={styles.content}>
+          {/* Profile Image Section */}
+          {/* <View style={styles.profileImageSection}>
+            <TouchableOpacity onPress={handleImageUpload}>
+              {data.profileImage ? (
+                <Image
+                  source={{ uri: `http://3.110.180.116:3000/${data.profileImage}` }} 
+                  style={styles.profileImage}
+                />
+              ) : (
+                <Image
+                  source={require('..//assets/images/user.png')}
+                  style={styles.profileImage}
+                />
+              )}
+              <View style={styles.cameraIcon}>
+                <Ionicons name="camera" size={20} color={White} />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.profileName}>{user?.firstName + " " + user?.lastName}</Text>
+          </View> */}
+
+          {/* Form Fields */}
+          <View style={styles.formSection}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>First Name</Text>
+              <TextInput
+                style={styles.textInput}
+                keyboardType="name-phone-pad"
+                placeholder="Enter your first name"
+                placeholderTextColor={Gray}
+                value={data.firstName}
+                onChangeText={text => handledata('firstName', text)}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Last Name</Text>
+              <TextInput
+                style={styles.textInput}
+                keyboardType="name-phone-pad"
+                placeholder="Enter your last name"
+                placeholderTextColor={Gray}
+                value={data.lastName}
+                onChangeText={text => handledata('lastName', text)}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email</Text>
+              <TextInput
+                style={styles.textInput}
+                keyboardType="email-address"
+                placeholder="Enter your email"
+                placeholderTextColor={Gray}
+                value={data.email}
+                onChangeText={text => handledata('email', text)}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Mobile Number</Text>
+              <TextInput
+                style={[styles.textInput, styles.disabledInput]}
+                keyboardType="phone-pad"
+                placeholder="Enter your mobile number"
+                placeholderTextColor={Gray}
+                value={user?.phone}
+                editable={false}
+              />
+            </View>
           </View>
-        </TouchableOpacity> */}
-      {/* </View> */}
-      {/* <Text style={{ color: White, fontSize: 20, textAlign: 'center', marginTop: 15, fontWeight: '500' }}>{user?.firstName + " " + user?.lastName}</Text> */}
-      <Text style={{ color: Gray, marginTop: 20, fontSize: 15 }}>First Name</Text>
-      <TextInput
-        style={{
-          borderColor: White,
-          borderWidth: 1,
-          marginTop: 10,
-          paddingHorizontal: 20,
-          height: 50,
-          borderRadius: 8,
-          color: White
-        }}
-        keyboardType="name-phone-pad"
-        placeholder="Enter your name"
-        value={data.firstName}
-        onChangeText={text => handledata('firstName', text)}
-      />
-      <Text style={{ color: Gray, marginTop: 20, fontSize: 15 }}>Last Name</Text>
-      <TextInput
-        style={{
-          borderColor: White,
-          borderWidth: 1,
-          marginTop: 10,
-          paddingHorizontal: 20,
-          height: 50,
-          borderRadius: 8,
-          color: White
-        }}
-        keyboardType="name-phone-pad"
-        placeholder="Enter your name"
-        value={data.lastName}
-        onChangeText={text => handledata('lastName', text)}
-      />
-      <Text style={{ color: Gray, marginTop: 10, fontSize: 15 }}>Email</Text>
-      <TextInput
-        style={{
-          borderColor: White,
-          borderWidth: 1,
-          marginTop: 10,
-          paddingHorizontal: 20,
-          height: 50,
-          borderRadius: 8,
-          color: White
-        }}
-        value={data.email}
-        keyboardType="email-address"
-        placeholder="Enter your email"
-        onChangeText={text => handledata('email', text)}
-      />
-      <Text style={{ color: Gray, marginTop: 10, fontSize: 15 }}>Mobile Number</Text>
-      <TextInput
-        style={{
-          borderColor: White,
-          borderWidth: 1,
-          marginTop: 10,
-          paddingHorizontal: 20,
-          height: 50,
-          borderRadius: 8,
-          color: White
-        }}
-        keyboardType="phone-pad"
-        placeholder="Enter your mobile number"
-        value={user?.phone}
-        editable={false}
-      />
-      <TouchableOpacity
-        style={{
-          backgroundColor: Gold,
-          height: 50,
-          borderRadius: 8,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginTop: 30,
-        }}
-        disabled={buttonDisabled}
-        onPress={handleUpdate}
-      >
-        <Text style={{ color: White, fontWeight: '500' }}>
-          {updateProfileMutation.isPending ? <ActivityIndicator size="small" color={Black} /> : 'Update'}
-        </Text>
-      </TouchableOpacity>
+        </View>
+
+        {/* Bottom Action Button */}
+        <View style={styles.bottomSection}>
+          <TouchableOpacity
+            style={[
+              styles.updateButton,
+              buttonDisabled && styles.updateButtonDisabled,
+            ]}
+            disabled={buttonDisabled || updateProfileMutation.isPending}
+            onPress={handleUpdate}
+          >
+            {updateProfileMutation.isPending ? (
+              <ActivityIndicator size="small" color={Black} />
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle-outline" size={20} color={Black} />
+                <Text style={styles.updateButtonText}>Update Profile</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   )
+}
+
+const styles = {
+  container: {
+    flex: 1,
+    backgroundColor: Black,
+  },
+  header: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    // justifyContent: 'space-between' as const,
+    gap: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  headerTitle: {
+    color: Gold,
+    fontSize: 20,
+    fontWeight: '700' as const,
+  },
+  placeholder: {
+    width: 40,
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  profileImageSection: {
+    alignItems: 'center' as const,
+    marginBottom: 32,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  cameraIcon: {
+    position: 'absolute' as const,
+    bottom: 0,
+    right: 0,
+    backgroundColor: Gold,
+    borderRadius: 15,
+    padding: 5,
+  },
+  profileName: {
+    color: White,
+    fontSize: 20,
+    textAlign: 'center' as const,
+    marginTop: 15,
+    fontWeight: '500' as const,
+  },
+  formSection: {
+    gap: 24,
+  },
+  inputGroup: {
+    gap: 8,
+  },
+  inputLabel: {
+    color: LightGold,
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  textInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    color: White,
+    fontSize: 16,
+  },
+  disabledInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    color: Gray,
+  },
+  bottomSection: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  updateButton: {
+    backgroundColor: Gold,
+    borderRadius: 16,
+    paddingVertical: 16,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    shadowColor: Gold,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  updateButtonDisabled: {
+    // backgroundColor: 'rgba(212, 175, 55, 0.3)',
+    // shadowOpacity: 0.1,
+  },
+  updateButtonText: {
+    color: Black,
+    fontSize: 18,
+    fontWeight: '700' as const,
+    marginLeft: 8,
+  },
 }
