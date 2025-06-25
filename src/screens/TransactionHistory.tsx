@@ -63,7 +63,7 @@ export default function TransactionHistory() {
 
   const formatCurrency = (amount: number | string) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return `$${numAmount.toFixed(2)}`;
+    return `R${numAmount.toFixed(2)}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -368,7 +368,7 @@ export default function TransactionHistory() {
               showsVerticalScrollIndicator={false}
               
               refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Gold} />
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Gold}  colors={[Gold]} progressBackgroundColor={Black}/>
               }
             />
           )}

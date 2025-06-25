@@ -126,12 +126,12 @@ export default function RideDetails() {
               </View>
               <View style={styles.fareRow}>
                 <Text style={styles.fareLabel}>Price per km</Text>
-                <Text style={styles.fareValue}>${ride.vehicle.pricePerKm}</Text>
+                <Text style={styles.fareValue}>R{ride.vehicle.pricePerKm}</Text>
               </View>
               <View style={styles.fareDivider} />
               <View style={styles.fareRow}>
                 <Text style={styles.totalLabel}>Total Fare</Text>
-                <Text style={styles.totalValue}>${ride.fare.toFixed(2)}</Text>
+                <Text style={styles.totalValue}>R{ride.fare.toFixed(2)}</Text>
               </View>
             </View>
           </View>

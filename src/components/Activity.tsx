@@ -1,7 +1,5 @@
-
-
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Black, Gray, Gold, LightGold, White, DarkGray } from '../constants/Color'
 import Ionicons from 'react-native-vector-icons/Ionicons'
@@ -12,9 +10,10 @@ import { useNavigation } from '@react-navigation/native'
 export default function Activity() {
   const navigation: any = useNavigation();
   const [data, setData] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   // fetches all rides
-  const {data: rideHistory, isLoading} = useQuery({
+  const {data: rideHistory, isLoading, refetch} = useQuery({
     queryKey: ['ride-history'],
     queryFn: getRideHistory,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -27,6 +26,17 @@ export default function Activity() {
       setData(rideHistory.data.data.rides);
     }
   }, [rideHistory]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } catch (error) {
+      console.log('Failed to refresh ride history:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Calculate total rides and earnings
   const totalRides = data.length;
@@ -59,7 +69,7 @@ export default function Activity() {
         </Text>
       </View>
       <View style={styles.activityAmount}>
-        <Text style={styles.amountText}>${item.fare.toFixed(2) || '0.00'}</Text>
+        <Text style={styles.amountText}>R{item.fare.toFixed(2) || '0.00'}</Text>
         <View style={styles.statusContainer}>
           <View style={[styles.statusDot, { 
             backgroundColor: item.status === 'completed' ? '#4CAF50' : item.status === 'cancelled' ? '#F44336' : Gold 
@@ -125,6 +135,9 @@ export default function Activity() {
           renderItem={renderRideItem}
           contentContainerStyle={styles.activityListContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Gold} colors={[Gold]} progressBackgroundColor={Black}/>
+          }
         />
       ) : (
         <EmptyState />

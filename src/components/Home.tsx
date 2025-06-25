@@ -166,11 +166,11 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   greeting: {
-    color: Gray,
+    color: Gold,
     fontSize: 16,
   },
   userName: {
-    color: White,
+    color: Gold,
     fontSize: 22,
     fontWeight: '700',
   },

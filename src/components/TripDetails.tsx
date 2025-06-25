@@ -1,4 +1,4 @@
-import { Dimensions, FlatList, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, FlatList, Image, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
@@ -444,7 +444,7 @@ export default function TripDetails() {
                       </View>
                       <Text
                         style={{ color: LightGold, fontSize: 14, fontWeight: '700' }}>
-                        ${item.price}
+                        R{item.price}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -534,6 +534,12 @@ export default function TripDetails() {
                     </Text>
                   )}
 
+{mode === 'arrived' && (
+                    <Text style={{color: White, fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 10, marginTop: 10}}>
+                      Your driver has arrived at your location
+                    </Text>
+                  )}
+
                  {/* Driver Details Card */}
                  <View style={styles.driverCard}>
                     <View style={styles.driverHeader}>
@@ -572,9 +578,11 @@ export default function TripDetails() {
                       </View>
                       <TouchableOpacity style={styles.vehicleDetail}>
                         <Ionicons name="call" size={18} color={Gold} />
-                        <Text style={styles.vehicleText}>
-                          {rideInfo?.data?.data?.ride?.driver?.phone ?? driverDetails?.phone}
-                        </Text>
+                        <TouchableOpacity onPress={() => Linking.openURL(`tel:${rideInfo?.data?.data?.ride?.driver?.phone ?? driverDetails?.phone}`)}>
+                          <Text style={styles.vehicleText}>
+                            {rideInfo?.data?.data?.ride?.driver?.phone ?? driverDetails?.phone}
+                          </Text>
+                        </TouchableOpacity>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -598,7 +606,7 @@ export default function TripDetails() {
                       alignItems: 'center',
                     }}>
                       <Text style={{color: Gold, fontSize: 16, fontWeight: '700'}}>Fare</Text>
-                      <Text style={{color: Gold, fontSize: 16, fontWeight: '700'}}>${rideInfo?.data?.data?.ride?.fare.toFixed(2)}</Text>
+                      <Text style={{color: Gold, fontSize: 16, fontWeight: '700'}}>R{rideInfo?.data?.data?.ride?.fare.toFixed(2)}</Text>
                       {/* <Text style={{color: Gold, fontSize: 16, fontWeight: '700'}}>
                         <Ionicons name="cash" size={20} color={Gold} />
                       </Text> */}
@@ -662,6 +670,12 @@ export default function TripDetails() {
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={{ paddingBottom: 20 }}
                 >
+                  {(mode === 'in_progress' || mode === 'otp_verified') && (
+                    <Text style={{color: White, fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 10, marginTop: 10}}>
+                      The ride is in progress
+                    </Text>
+                  )}
+
                   {/* Live Trip Status */}
                   <View style={styles.liveStatusCard}>
                     <View style={styles.liveStatusHeader}>
@@ -673,7 +687,7 @@ export default function TripDetails() {
                         {/* <Ionicons name="time" size={18} color={Gold} /> */}
                         {/* <View> */}
                           <Text style={styles.metricLabel}>Fare</Text>
-                          <Text style={styles.metricValue}>${rideInfo?.data?.data?.ride?.fare.toFixed(2)}</Text>
+                          <Text style={styles.metricValue}>R{rideInfo?.data?.data?.ride?.fare.toFixed(2)}</Text>
                         {/* </View> */}
                       </View>
                       <View style={styles.metricDivider} />

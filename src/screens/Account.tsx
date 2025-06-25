@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, ScrollView, ActivityIndicator } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, Image, ScrollView, ActivityIndicator, RefreshControl } from 'react-native'
 import React, { useState, useEffect, useCallback } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Black, DarkGray, Gold, Gray, LightGold, White } from '../constants/Color'
@@ -13,6 +13,7 @@ export default function Account() {
   const LOGOUT = useAuthStore(state => state.logout)
   const navigation: any = useNavigation()
   const [walletBalance, setWalletBalance] = useState(0)
+  const [refreshing, setRefreshing] = useState(false)
 
   // Fetch wallet balance
   const { 
@@ -37,7 +38,7 @@ export default function Account() {
 
   const formatCurrency = (amount: number | string) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return `$${numAmount.toFixed(2)}`;
+    return `R${numAmount.toFixed(2)}`;
   };
 
   const handleLogout = () => {
@@ -47,6 +48,17 @@ export default function Account() {
     });
     LOGOUT()
   }
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetchWalletBalance();
+    } catch (error) {
+      console.log('Failed to refresh wallet balance:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Menu items with icons, labels, and navigation targets
   const menuItems = [
@@ -98,17 +110,16 @@ export default function Account() {
       danger: true
     }
   ]
-
-  useFocusEffect(
-    useCallback(() => {
-      console.log('Account screen focused - refetching wallet balance');
-      refetchWalletBalance()
-    }, [refetchWalletBalance])
-  )
+  
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Gold}  colors={[Gold]} progressBackgroundColor={Black}/>
+        }
+      >
         {/* Header Section */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Account</Text>

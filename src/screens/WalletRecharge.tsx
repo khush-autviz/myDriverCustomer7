@@ -104,19 +104,19 @@ export default function WalletRecharge() {
     }
 
     if (numAmount < 1) {
-      ShowToast('Minimum recharge amount is $1', { type: 'error' });
+      ShowToast('Minimum recharge amount is R1', { type: 'error' });
       return;
     }
 
     if (numAmount > 10000) {
-      ShowToast('Maximum recharge amount is $10,000', { type: 'error' });
+      ShowToast('Maximum recharge amount is R10,000', { type: 'error' });
       return;
     }
 
     // Show confirmation dialog
     Alert.alert(
       'Confirm Recharge',
-      `Are you sure you want to recharge your wallet with $${numAmount.toFixed(2)}?`,
+      `Are you sure you want to recharge your wallet with R${numAmount.toFixed(2)}?`,
       [
         {
           text: 'Cancel',
@@ -134,8 +134,8 @@ export default function WalletRecharge() {
 
   const formatCurrency = (value: string) => {
     const numValue = parseFloat(value);
-    if (isNaN(numValue)) return '$0.00';
-    return `$${numValue.toFixed(2)}`;
+    if (isNaN(numValue)) return 'R0.00';
+    return `R${numValue.toFixed(2)}`;
   };
 
   const handleWebViewNavigationStateChange = (navState: any) => {
@@ -231,7 +231,7 @@ export default function WalletRecharge() {
             <View style={styles.inputSection}>
               <Text style={styles.sectionTitle}>Enter Amount</Text>
               <View style={styles.amountInputContainer}>
-                <Text style={styles.currencySymbol}>$</Text>
+                <Text style={styles.currencySymbol}>R</Text>
                 <TextInput
                   style={styles.amountInput}
                   value={amount}
@@ -269,7 +269,7 @@ export default function WalletRecharge() {
                         selectedAmount === quickAmount && styles.selectedQuickAmountText,
                       ]}
                     >
-                      ${quickAmount}
+                      R{quickAmount}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -319,7 +319,7 @@ export default function WalletRecharge() {
               <>
                 <Ionicons name="wallet-outline" size={20} color={Black} />
                 <Text style={styles.rechargeButtonText}>
-                  Recharge ${amount ? formatCurrency(amount).replace('$', '') : '0.00'}
+                  Recharge R{amount ? formatCurrency(amount).replace('R', '') : '0.00'}
                 </Text>
               </>
             )}
