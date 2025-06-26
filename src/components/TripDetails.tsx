@@ -28,6 +28,7 @@ export default function TripDetails() {
   const [selctedRide, setselctedRide] = useState<any>()
   const [rideOtp, setrideOtp] = useState<string>()
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const mapRef = useRef<MapView>(null);
   const screenHeight = Dimensions.get('window').height;
   const socket = useSocket()
 
@@ -71,6 +72,17 @@ export default function TripDetails() {
       ? { latitude: destinationLocation.lat, longitude: destinationLocation.lng }
       : undefined;
 
+  // Add re-center function
+  const handleReCenter = useCallback(() => {
+    if (mapRef.current && pickupCoord) {
+      mapRef.current.animateToRegion({
+        latitude: pickupCoord.latitude,
+        longitude: pickupCoord.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      }, 1000);
+    }
+  }, [pickupCoord]);
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log('handleSheetChanges', index);
@@ -293,6 +305,15 @@ export default function TripDetails() {
         </TouchableOpacity>
         )}
 
+        {/* Re-center Button */}
+        <TouchableOpacity
+          style={styles.reCenterButton}
+          onPress={handleReCenter}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="locate" size={24} color={Gold} />
+        </TouchableOpacity>
+
         {/* Cancel Ride Modal */}
         <Modal
           isVisible={modalVisible}
@@ -356,6 +377,7 @@ export default function TripDetails() {
 
 
         <MapView
+          ref={mapRef}
           style={styles.map}
           showsCompass={false}
           provider='google'
@@ -747,9 +769,11 @@ export default function TripDetails() {
                       </View>
                       <TouchableOpacity style={styles.vehicleDetail}>
                         <Ionicons name="call" size={18} color={Gold} />
-                        <Text style={styles.vehicleText}>
-                          {rideInfo?.data?.data?.ride?.driver?.phone}
-                        </Text>
+                        <TouchableOpacity onPress={() => Linking.openURL(`tel:${rideInfo?.data?.data?.ride?.driver?.phone}`)}>
+                          <Text style={styles.vehicleText}>
+                            {rideInfo?.data?.data?.ride?.driver?.phone}
+                          </Text>
+                        </TouchableOpacity>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -777,6 +801,7 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject,
+    height: "75%",
   },
   // Modal Styles
   modal: {
@@ -1204,5 +1229,27 @@ const styles = StyleSheet.create({
     color: Gold,
     fontSize: 14,
     fontWeight: '700',
+  },
+  reCenterButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    zIndex: 100,
+    backgroundColor: Black,
+    borderRadius: 25,
+    width: 50,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Gold,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
 });

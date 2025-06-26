@@ -47,9 +47,10 @@ export default function Ratings() {
       {/* {ratingsMutation.isPending && (
         <ActivityIndicator size="large" color={Gold} />
       )} */}
-      {ratingsMutation.isPending && (
+      {ratingsMutation.isPending ?
          <Loader />
-        )}
+        :
+        <>
       <View style={styles.header}>
         {/* <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Gold} />
@@ -99,6 +100,8 @@ export default function Ratings() {
       >
         <Text style={styles.submitButtonText}>Submit Rating</Text>
       </TouchableOpacity>
+      </>
+      }
     </SafeAreaView>
   )
 }
