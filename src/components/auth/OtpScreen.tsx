@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     paddingHorizontal: 20,
-    textAlign: 'center',
+    textAlign: 'left',
     letterSpacing: 4,
   },
   otpCounter: {

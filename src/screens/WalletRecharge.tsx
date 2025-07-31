@@ -55,7 +55,7 @@ export default function WalletRecharge() {
       console.log('Topup order created successfully:', response);
       
       // Extract PayPal approval URL from response
-      const approvalUrl = response?.data?.data?.approvalUrl;
+      const approvalUrl = response?.data?.data?.paymentUrl;
       const orderId = response?.data?.data?.orderId;
       
       if (approvalUrl) {
@@ -143,24 +143,35 @@ export default function WalletRecharge() {
     
     // Handle PayPal success/cancel URLs
     const url = navState.url;
-    
-    // Check for PayPal success URL (you may need to adjust these based on your PayPal configuration)
-    if (url.includes('/wallet/success') || url.includes('success')) {
-        console.log('Payment success! Token:', url);
-        const token = url.match(/token=([^&]+)/)?.[1];
-        setPaypalToken(token);
-        console.log('Token: paypal', token);
-        captureTopupMutation.mutate(token);
+
+    if (url.includes('http://localhost:3000/wallet/success')) {
       setShowWebView(false);
       ShowToast('Payment completed successfully!', { type: 'success' });
       navigation.goBack();
     }
-    
-    // Check for PayPal cancel URL
-    if (url.includes('paypal.com/cancel') || url.includes('cancel')) {
+
+    if (url.includes('http://localhost:3000/wallet/cancel')) {
       setShowWebView(false);
       ShowToast('Payment was cancelled', { type: 'warning' });
     }
+    
+    // Check for PayPal success URL (you may need to adjust these based on your PayPal configuration)
+    // if (url.includes('/wallet/success') || url.includes('success')) {
+    //     console.log('Payment success! Token:', url);
+    //     const token = url.match(/token=([^&]+)/)?.[1];
+    //     setPaypalToken(token);
+    //     console.log('Token: paypal', token);
+    //     captureTopupMutation.mutate(token);
+    //   setShowWebView(false);
+    //   ShowToast('Payment completed successfully!', { type: 'success' });
+    //   navigation.goBack();
+    // }
+    
+    // Check for PayPal cancel URL
+    // if (url.includes('paypal.com/cancel') || url.includes('cancel')) {
+    //   setShowWebView(false);
+    //   ShowToast('Payment was cancelled', { type: 'warning' });
+    // }
   };
 
   const handleWebViewError = (error: any) => {
@@ -185,7 +196,7 @@ export default function WalletRecharge() {
           >
             <Ionicons name="close" size={24} color={Gold} />
           </TouchableOpacity>
-          <Text style={styles.webViewTitle}>PayPal Payment</Text>
+          <Text style={styles.webViewTitle}>PayFast Payment</Text>
           <View style={styles.placeholder} />
         </View>
         
@@ -198,7 +209,7 @@ export default function WalletRecharge() {
           renderLoading={() => (
             <View style={styles.webViewLoading}>
               <ActivityIndicator size="large" color={Gold} />
-              <Text style={styles.webViewLoadingText}>Loading PayPal...</Text>
+              <Text style={styles.webViewLoadingText}>Loading PayFast...</Text>
             </View>
           )}
         />
@@ -283,9 +294,9 @@ export default function WalletRecharge() {
                 <View style={styles.paymentMethodInfo}>
                   <Ionicons name="logo-paypal" size={24} color="#0070BA" />
                   <View style={styles.paymentMethodDetails}>
-                    <Text style={styles.paymentMethodName}>PayPal</Text>
+                    <Text style={styles.paymentMethodName}>PayFast</Text>
                     <Text style={styles.paymentMethodDescription}>
-                      Secure payment with PayPal
+                      Secure payment with PayFast
                     </Text>
                   </View>
                 </View>
@@ -297,7 +308,7 @@ export default function WalletRecharge() {
             <View style={styles.termsSection}>
               <Text style={styles.termsText}>
                 By proceeding, you agree to our Terms of Service and Privacy Policy.
-                Your payment will be processed securely through PayPal.
+                Your payment will be processed securely through PayFast.
               </Text>
             </View>
           </View>

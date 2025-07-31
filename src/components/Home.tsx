@@ -101,9 +101,9 @@ export default function Home() {
           <View style={styles.promoContent}>
             <Text style={styles.promoTitle}>40% off Rides</Text>
             <Text style={styles.promoSubtitle}>Limited time offer!</Text>
-            <TouchableOpacity style={styles.promoButton}>
+            {/* <TouchableOpacity style={styles.promoButton}>
               <Text style={styles.promoButtonText}>Book now</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
           <View style={styles.promoImageContainer}>
             {/* You can add an actual image here */}
@@ -118,9 +118,9 @@ export default function Home() {
           <View style={styles.updatesContent}>
             <Text style={styles.updatesTitle}>Future Updates</Text>
             <Text style={styles.updatesSubtitle}>Coming soon!</Text>
-            <TouchableOpacity style={styles.updatesButton}>
+            {/* <TouchableOpacity style={styles.updatesButton}>
               <Text style={styles.updatesButtonText}>Learn more</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
           <View style={styles.updatesImageContainer}>
             {/* You can add an actual image here */}

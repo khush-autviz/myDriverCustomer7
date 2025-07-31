@@ -160,10 +160,16 @@ export default function Account() {
         {/* Wallet Card */}
         <View style={styles.walletCard}>
           <View style={styles.walletHeader}>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
             <View style={styles.walletIconContainer}>
               <Ionicons name="wallet-outline" size={20} color={Gold} />
             </View>
             <Text style={styles.walletLabel}>Wallet Balance</Text>
+            </View>
+
+            <TouchableOpacity onPress={() => refetchWalletBalance()}>
+              <Ionicons name="refresh" size={20} color={Gold} />
+            </TouchableOpacity>
           </View>
           <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
           <View style={styles.walletBalanceContainer}>
@@ -477,6 +483,7 @@ const styles = StyleSheet.create({
   walletHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 12,
   },
   walletIconContainer: {

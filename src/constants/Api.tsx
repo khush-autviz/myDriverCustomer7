@@ -85,7 +85,7 @@ export const getWalletTransactionHistory = async () => {
 
 // wallet topup (create order)
 export const createWalletTopup = async (data: any) => {
-    const response = await axios.post('/wallet/paypal/create-order', data)
+    const response = await axios.post('/wallet/payfast/create-payment', data)
     return response
 }
 
