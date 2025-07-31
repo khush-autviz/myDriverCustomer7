@@ -9,6 +9,8 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -72,13 +74,17 @@ export default function OtpScreen() {
   };
 
   return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{flex: 1, backgroundColor: Black}}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <TouchableOpacity 
           style={styles.backButton} 
           onPress={() => navigation.replace('Signin')}
         >
-          <View style={styles.backRow}>
+          <View style={styles.backRow}>\
             <Ionicons name="chevron-back" size={20} color={White} />
             <Text style={styles.backText}>Back</Text>
           </View>
@@ -140,6 +146,7 @@ export default function OtpScreen() {
         )}
       </TouchableOpacity>
     </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 

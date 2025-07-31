@@ -348,7 +348,7 @@ export default function Signup() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{flex: 1}}
+      style={{flex: 1, backgroundColor: Black}}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
       <ScrollView style={styles.scrollView}>
         <SafeAreaView style={styles.container}>

@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity, TextInput, Platform, ActivityIndicator, ScrollView } from 'react-native'
+import { View, Text, Image, TouchableOpacity, TextInput, Platform, ActivityIndicator, ScrollView, KeyboardAvoidingView } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { Black, Gold, Gray, White, LightGold } from '../constants/Color'
 import { useAuthStore } from '../store/authStore'
@@ -157,6 +157,10 @@ export default function Profile() {
 
 
   return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{flex: 1, backgroundColor: Black}}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
     <SafeAreaView style={styles.container}>
       {isLoading && <Loader />}
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -269,6 +273,7 @@ export default function Profile() {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </KeyboardAvoidingView>
   )
 }
 

@@ -64,25 +64,61 @@ export default function TripDetails() {
   // location details
   const pickupCoord =
     pickupLocation && pickupLocation.lat !== undefined && pickupLocation.lng !== undefined
-      ? { latitude: pickupLocation.lat, longitude: pickupLocation.lng }
+      // ? { latitude: pickupLocation.lat, longitude: pickupLocation.lng }
+      ? { latitude: pickupLocation.lng, longitude: pickupLocation.lat }
       : undefined;
 
   const destinationCoord =
     destinationLocation && destinationLocation.lat !== undefined && destinationLocation.lng !== undefined
-      ? { latitude: destinationLocation.lat, longitude: destinationLocation.lng }
+      // ? { latitude: destinationLocation.lat, longitude: destinationLocation.lng }
+      ? { latitude: destinationLocation.lng, longitude: destinationLocation.lat }
       : undefined;
 
   // Add re-center function
   const handleReCenter = useCallback(() => {
-    if (mapRef.current && pickupCoord) {
-      mapRef.current.animateToRegion({
-        latitude: pickupCoord.latitude,
-        longitude: pickupCoord.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      }, 1000);
+    if (mapRef.current) {
+      let centerLocation;
+      let delta = 0.05;
+
+      if (mode === 'booking' || mode === 'searchingDriver' || mode === 'noDriversFound') {
+        // Center on pickup location
+        centerLocation = pickupCoord;
+      } else if (mode === 'accepted' || mode === 'arrived') {
+        // Center between pickup and driver location
+        if (pickupCoord && driverLocation) {
+          centerLocation = {
+            latitude: (pickupCoord.latitude + driverLocation.latitude) / 2,
+            longitude: (pickupCoord.longitude + driverLocation.longitude) / 2
+          };
+          delta = 0.08; // Wider view to show both points
+        } else {
+          centerLocation = pickupCoord;
+        }
+      } else if (mode === 'otp_verified' || mode === 'in_progress') {
+        // Center between driver location and destination
+        if (driverLocation && destinationCoord) {
+          centerLocation = {
+            latitude: (driverLocation.latitude + destinationCoord.latitude) / 2,
+            longitude: (driverLocation.longitude + destinationCoord.longitude) / 2
+          };
+          delta = 0.08; // Wider view to show both points
+        } else {
+          centerLocation = destinationCoord;
+        }
+      } else {
+        centerLocation = pickupCoord;
+      }
+
+      if (centerLocation) {
+        mapRef.current.animateToRegion({
+          latitude: centerLocation.latitude,
+          longitude: centerLocation.longitude,
+          latitudeDelta: delta,
+          longitudeDelta: delta,
+        }, 1000);
+      }
     }
-  }, [pickupCoord]);
+  }, [pickupCoord, destinationCoord, driverLocation, mode]);
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log('handleSheetChanges', index);
@@ -137,13 +173,15 @@ export default function TripDetails() {
         pickupLocation: {
           address: pickupLocation?.description,
           coordinates: [
-            pickupCoord?.latitude, pickupCoord?.longitude,
+            // pickupCoord?.latitude, pickupCoord?.longitude,
+            pickupLocation?.lat, pickupLocation?.lng
           ]
         },
         destination: {
           address: destinationLocation?.description,
           coordinates: [
-            destinationCoord?.latitude, destinationCoord?.longitude,
+            // destinationCoord?.latitude, destinationCoord?.longitude,
+            destinationLocation?.lat, destinationLocation?.lng
           ]
         },
         vehicleId: selctedRide.vehicleId,
@@ -172,6 +210,13 @@ export default function TripDetails() {
     console.log('ride accepted', data.driver);
     refetch();
     setdriverDetails(data.driver);
+    // Store driver coordinates from socket data
+    if (data.coords) {
+      setdriverLocation({
+        latitude: data.coords.latitude,
+        longitude: data.coords.longitude
+      });
+    }
     setmode('accepted');
   }, [refetch]);
 
@@ -199,7 +244,10 @@ export default function TripDetails() {
 
   const handleDriverLocation = useCallback((data: any) => {
     console.log('driver location', data);
-    setdriverLocation(data);
+    setdriverLocation({
+      latitude: data.coords.latitude,
+      longitude: data.coords.longitude
+    });
   }, []);
 
   const handleRideCancelled = useCallback((data: any) => {
@@ -263,6 +311,34 @@ export default function TripDetails() {
       longitude: destinationLocation.lng
     } : null
   }), [pickupLocation, destinationLocation]);
+
+  // Compute route directions based on ride mode
+  const routeDirections = useMemo(() => {
+    if (mode === 'booking' || mode === 'searchingDriver' || mode === 'noDriversFound') {
+      // Show pickup to destination route
+      return {
+        origin: pickupCoord,
+        destination: destinationCoord
+      };
+    } else if (mode === 'accepted' || mode === 'arrived') {
+      // Show pickup to driver location route
+      return {
+        origin: pickupCoord,
+        destination: driverLocation
+      };
+    } else if (mode === 'otp_verified' || mode === 'in_progress') {
+      // Show driver location to destination route
+      return {
+        origin: driverLocation,
+        destination: destinationCoord
+      };
+    }
+    // Default fallback
+    return {
+      origin: pickupCoord,
+      destination: destinationCoord
+    };
+  }, [mode, pickupCoord, destinationCoord, driverLocation]);
 
   useEffect(() => {
     if (rideInfo?.data?.data?.ride?.status && rideInfo?.data?.data?.ride?.status !== 'cancelled' && rideInfo?.data?.data?.ride?.status !== 'searchingDriver') {
@@ -401,9 +477,16 @@ export default function TripDetails() {
             </Marker>
           )}
 
+          {/* Driver Marker */}
+          {driverLocation && (mode === 'accepted' || mode === 'arrived' || mode === 'otp_verified' || mode === 'in_progress') && (
+            <Marker coordinate={driverLocation}>
+              <Image source={require('../assets/logo/car.png')} style={{ width: 40, height: 40 }} />
+            </Marker>
+          )}
+
           <MapViewDirections
-            origin={pickupCoord}
-            destination={destinationCoord}
+            origin={routeDirections.origin}
+            destination={routeDirections.destination}
             apikey='AIzaSyDGQZ-LNDI4iv5CyqdU3BX5dl9PaEpOfrQ'
             strokeColor={Gold}
             strokeWidth={4}
