@@ -38,11 +38,11 @@ export default function Location() {
   const pickupSearchRef = useRef<any>(null);
   const dropSearchRef = useRef<any>(null);
 
-  // Get current location on component mount and set as pickup
+  // Get current location on component mount and set as pickup only if no pickup is selected
   useEffect(() => {
     const fetchCurrentLocation = async () => {
       await getCurrentLocation();
-      if (location) {
+      if (location && !pickupSelected) {
         // console.log('current location', location);
         // Reverse geocode to get address from coordinates
         try {
@@ -52,7 +52,7 @@ export default function Location() {
           const data = await response.json();
           if (data.results && data.results.length > 0) {
             const address = data.results[0].formatted_address;
-            // Automatically set pickup location with current coordinates and address
+            // Only set pickup location if no pickup has been selected yet
             setPickupLocation({ 
               lat: location.latitude, 
               lng: location.longitude, 
@@ -61,7 +61,7 @@ export default function Location() {
             setPickupSelected(true);
             setIsCurrentLocation(true);
             setCurrentLocationAddress('Current Location'); // Keep showing "Current Location"
-            console.log('pickup location set');
+            console.log('pickup location set to current location');
           }
         } catch (error) {
           console.log('error getting address', error);
@@ -72,20 +72,26 @@ export default function Location() {
     };
 
     fetchCurrentLocation();
-  }, [location, getCurrentLocation, setPickupLocation]);
+  }, [location, getCurrentLocation, setPickupLocation, pickupSelected]);
 
   const handleSelect = (coords: { lat: number; lng: number }, description: string) => {
     if (activeType === 'pickup') {
+      console.log('Setting pickup location:', { lat: coords.lat, lng: coords.lng, description });
       setPickupLocation({ lat: coords.lat, lng: coords.lng, description });
       setPickupSelected(true);
       setActiveType(null);
       setIsCurrentLocation(false); // User selected a different location
       setCurrentLocationAddress(description);
+      // Update the pickup search ref with the new value
+      if (pickupSearchRef.current) {
+        pickupSearchRef.current.setQuery(description);
+      }
     } else if (activeType === 'drop') {
       if (!pickupSelected) {
         Alert.alert('Please select your pickup location first');
         return;
       }
+      console.log('Setting destination location:', { lat: coords.lat, lng: coords.lng, description });
       setDestinationLocation({ lat: coords.lat, lng: coords.lng, description });
       setDropSelected(true);
       setActiveType(null);
@@ -104,7 +110,17 @@ export default function Location() {
 
   // Navigate when both locations are selected
   if (pickupSelected && dropSelected) {
-    setTimeout(() => navigation.replace('TripDetails'), 100);
+    // Get the current locations from the store
+    const currentPickupLocation = useAuthStore.getState().pickupLocation;
+    const currentDestinationLocation = useAuthStore.getState().destinationLocation;
+    
+    console.log('Navigating to TripDetails with pickup:', currentPickupLocation);
+    console.log('Navigating to TripDetails with destination:', currentDestinationLocation);
+    
+    setTimeout(() => navigation.replace('TripDetails', {
+      pickupLocation: currentPickupLocation,
+      destinationLocation: currentDestinationLocation
+    }), 100);
   }
 
   return (

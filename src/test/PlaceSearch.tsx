@@ -93,6 +93,8 @@ const PlacesSearch = forwardRef(({
       
       if (res.data.status === 'OK' && res.data.result && res.data.result.geometry) {
         const coords = res.data.result.geometry.location;
+        console.log('PlaceSearch - fetched coordinates:', coords);
+        console.log('PlaceSearch - description:', description);
         setQuery(description);
         setSelectedDescription(description);
         onPlaceSelected(coords, description);
@@ -121,19 +123,27 @@ const PlacesSearch = forwardRef(({
 
   const handleBlur = () => {
     if (!editable) return;
-    // Revert input value when the input loses focus
-    setQuery(selectedDescription);
+    // Only revert if the query is empty, otherwise keep the current value
+    if (!query.trim()) {
+      setQuery(selectedDescription);
+    }
   };
 
-  // Exposing fetchPlaceDetails via ref
+  // Exposing fetchPlaceDetails and setQuery via ref
   useImperativeHandle(ref, () => ({
     fetchPlaceDetails,
+    setQuery: (newText: string) => {
+      setQuery(newText);
+      setSelectedDescription(newText);
+    },
   }));
 
   useEffect(() => {
-    setQuery(initialValue);
-    setSelectedDescription(initialValue);
-  }, [initialValue]);
+    if (initialValue && !selectedDescription) {
+      setQuery(initialValue);
+      setSelectedDescription(initialValue);
+    }
+  }, [initialValue, selectedDescription]);
 
   return (
     <View style={styles.container}>

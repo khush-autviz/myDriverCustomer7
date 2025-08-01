@@ -4,7 +4,7 @@ import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Black, Gold, Gray, LightGold, White } from '../constants/Color';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import MapView, { Marker } from 'react-native-maps';
 import { LocationContext } from '../context/LocationProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,6 +19,7 @@ import Modal from 'react-native-modal';
 
 export default function TripDetails() {
   const navigation: any = useNavigation();
+  const route: any = useRoute();
   const [mode, setmode] = useState('booking');
   const [modalVisible, setmodalVisible] = useState(false);
   const [ridePrices, setridePrices] = useState([])
@@ -32,19 +33,26 @@ export default function TripDetails() {
   const screenHeight = Dimensions.get('window').height;
   const socket = useSocket()
 
-  const { pickupLocation, destinationLocation, setRideId } = useAuthStore();
+  // Get locations from route params
+  const pickupLocation = route.params?.pickupLocation;
+  const destinationLocation = route.params?.destinationLocation;
+  const { setRideId } = useAuthStore();
+
   const rideId = useAuthStore(state => state.rideId)
+
+  // Log the locations received from route params
+  console.log('TripDetails - pickupLocation from route params:', pickupLocation);
+  console.log('TripDetails - destinationLocation from route params:', destinationLocation);
 
   const { location } = useContext(LocationContext)
 
   const snapPoints = useMemo(() => ['25%', '50%'], []);
 
   const cancelReasons = [
-    'Rider not at pickup location',
-    'Rider not responding',
-    'Vehicle issue or breakdown',
-    'Personal emergency',
-    'Rider asked to cancel the trip',
+    'Driver hasn’t arrived',
+    'Driver not responding',
+    'Driver’s vehicle has a problem',
+    'I have a personal emergency',
   ];
 
   // get ride details
