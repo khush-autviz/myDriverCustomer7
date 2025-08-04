@@ -21,6 +21,9 @@ interface Suggestion {
 }
 
 export default function Location() {
+  // Static flag to prevent any geocoding API calls if one is already in progress
+  const staticGeocodingInProgress = useRef(false);
+
   const navigation: any = useNavigation();
   const setPickupLocation = useAuthStore(state => state.setPickupLocation);
   const setDestinationLocation = useAuthStore(
@@ -37,6 +40,8 @@ export default function Location() {
   const [isCurrentLocation, setIsCurrentLocation] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [geocodeCache, setGeocodeCache] = useState<{[key: string]: string}>({});
+  const geocodingAttemptedRef = useRef(false);
+  const globalGeocodingInProgressRef = useRef(false); // Global flag to prevent concurrent calls
 
   // Session-level cache to persist across component re-renders
   const sessionGeocodeCache = useRef<{[key: string]: string}>({});
@@ -47,8 +52,121 @@ export default function Location() {
 
   // Reset the geocoding flag when component mounts
   useEffect(() => {
-    // No longer needed since we removed automatic geocoding
+    geocodingAttemptedRef.current = false; // Reset the ref when component mounts
+    globalGeocodingInProgressRef.current = false; // Reset global flag
+    staticGeocodingInProgress.current = false; // Reset static flag
   }, []);
+
+  // Set current location as pickup on screen focus (with safeguards)
+  useFocusEffect(
+    React.useCallback(() => {
+      const setCurrentLocationAsPickup = async () => {
+        // Multiple safeguards to prevent repeated API calls
+        if (
+          !location ||
+          pickupSelected ||
+          geocodingAttemptedRef.current ||
+          globalGeocodingInProgressRef.current ||
+          staticGeocodingInProgress.current
+        ) {
+          console.log('Skipping auto-set pickup:', {
+            hasLocation: !!location,
+            pickupSelected,
+            geocodingAttempted: geocodingAttemptedRef.current,
+            globalInProgress: globalGeocodingInProgressRef.current,
+            staticInProgress: staticGeocodingInProgress.current,
+          });
+          return;
+        }
+
+        console.log('Auto-setting current location as pickup');
+        geocodingAttemptedRef.current = true; // Prevent repeated attempts
+        globalGeocodingInProgressRef.current = true; // Prevent concurrent calls
+        staticGeocodingInProgress.current = true; // Prevent any other geocoding calls
+
+        const cacheKey = `${location.latitude.toFixed(
+          4,
+        )},${location.longitude.toFixed(4)}`;
+
+        // Check session cache first
+        if (sessionGeocodeCache.current[cacheKey]) {
+          // Use session cached result
+          setPickupLocation({
+            lat: location.latitude,
+            lng: location.longitude,
+            description: sessionGeocodeCache.current[cacheKey],
+          });
+          setCurrentLocationAddress('Current Location');
+          setIsCurrentLocation(true);
+          setPickupSelected(true);
+          globalGeocodingInProgressRef.current = false; // Reset global flag
+          staticGeocodingInProgress.current = false; // Reset static flag
+          console.log('Auto-set pickup to current location (session cached)');
+        } else if (geocodeCache[cacheKey]) {
+          // Use cached result
+          setPickupLocation({
+            lat: location.latitude,
+            lng: location.longitude,
+            description: geocodeCache[cacheKey],
+          });
+          setCurrentLocationAddress('Current Location');
+          setIsCurrentLocation(true);
+          setPickupSelected(true);
+          globalGeocodingInProgressRef.current = false; // Reset global flag
+          staticGeocodingInProgress.current = false; // Reset static flag
+          console.log('Auto-set pickup to current location (cached)');
+        } else {
+          // Make geocoding API call (only once per location)
+          console.log(
+            'Making geocoding API call for auto-set pickup:',
+            cacheKey,
+          );
+          try {
+            const response = await fetch(
+              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=AIzaSyDGQZ-LNDI4iv5CyqdU3BX5dl9PaEpOfrQ`,
+            );
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+              const address = data.results[0].formatted_address;
+              // Cache the result in both session and state
+              sessionGeocodeCache.current[cacheKey] = address;
+              setGeocodeCache(prev => ({...prev, [cacheKey]: address}));
+              setPickupLocation({
+                lat: location.latitude,
+                lng: location.longitude,
+                description: address,
+              });
+              setCurrentLocationAddress('Current Location');
+              setIsCurrentLocation(true);
+              setPickupSelected(true);
+              globalGeocodingInProgressRef.current = false; // Reset global flag
+              staticGeocodingInProgress.current = false; // Reset static flag
+              console.log('Auto-set pickup to current location');
+            }
+          } catch (error) {
+            console.log('error getting address for auto-set pickup', error);
+            console.error('Error getting address:', error);
+            // Fallback to coordinates only
+            setPickupLocation({
+              lat: location.latitude,
+              lng: location.longitude,
+              description: 'Current Location',
+            });
+            setCurrentLocationAddress('Current Location');
+            setIsCurrentLocation(true);
+            setPickupSelected(true);
+            globalGeocodingInProgressRef.current = false; // Reset global flag
+            staticGeocodingInProgress.current = false; // Reset static flag
+          } finally {
+            globalGeocodingInProgressRef.current = false; // Always reset global flag
+            staticGeocodingInProgress.current = false; // Always reset static flag
+          }
+        }
+      };
+
+      setCurrentLocationAsPickup();
+    }, [location?.latitude, location?.longitude, pickupSelected]), // More specific dependencies
+  );
 
   // REMOVED: Automatic geocoding on screen focus
   // Now geocoding will only happen when user explicitly selects "Use Current Location"
@@ -203,7 +321,14 @@ export default function Location() {
                   onPress={async () => {
                     if (item.place_id === 'current_location') {
                       // Handle current location selection with geocoding
-                      if (location) {
+                      if (
+                        location &&
+                        !globalGeocodingInProgressRef.current &&
+                        !staticGeocodingInProgress.current
+                      ) {
+                        globalGeocodingInProgressRef.current = true; // Prevent concurrent calls
+                        staticGeocodingInProgress.current = true; // Prevent any other geocoding calls
+
                         const handleCurrentLocationSelection = async () => {
                           const cacheKey = `${location.latitude.toFixed(
                             4,
@@ -223,6 +348,8 @@ export default function Location() {
                             setPickupSelected(true);
                             setActiveType(null);
                             setSuggestions([]);
+                            globalGeocodingInProgressRef.current = false; // Reset flag
+                            staticGeocodingInProgress.current = false; // Reset static flag
                             console.log(
                               'pickup location set to current location (session cached)',
                             );
@@ -238,6 +365,8 @@ export default function Location() {
                             setPickupSelected(true);
                             setActiveType(null);
                             setSuggestions([]);
+                            globalGeocodingInProgressRef.current = false; // Reset flag
+                            staticGeocodingInProgress.current = false; // Reset static flag
                             console.log(
                               'pickup location set to current location (cached)',
                             );
@@ -271,6 +400,8 @@ export default function Location() {
                                 setPickupSelected(true);
                                 setActiveType(null);
                                 setSuggestions([]);
+                                globalGeocodingInProgressRef.current = false; // Reset flag
+                                staticGeocodingInProgress.current = false; // Reset static flag
                                 console.log(
                                   'pickup location set to current location',
                                 );
@@ -292,6 +423,11 @@ export default function Location() {
                               setPickupSelected(true);
                               setActiveType(null);
                               setSuggestions([]);
+                              globalGeocodingInProgressRef.current = false; // Reset flag
+                              staticGeocodingInProgress.current = false; // Reset static flag
+                            } finally {
+                              globalGeocodingInProgressRef.current = false; // Always reset flag
+                              staticGeocodingInProgress.current = false; // Always reset static flag
                             }
                           }
                         };
