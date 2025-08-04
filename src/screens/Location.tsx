@@ -7,13 +7,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import React, { useRef, useState, useContext, useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import React, {useRef, useState, useContext, useEffect} from 'react';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Black, Gold, White } from '../constants/Color';
-import { useAuthStore } from '../store/authStore';
+import {Black, Gold, White} from '../constants/Color';
+import {useAuthStore} from '../store/authStore';
 import PlacesSearch from '../test/PlaceSearch';
-import { LocationContext } from '../context/LocationProvider';
+import {LocationContext} from '../context/LocationProvider';
 
 interface Suggestion {
   description: string;
@@ -22,62 +22,156 @@ interface Suggestion {
 
 export default function Location() {
   const navigation: any = useNavigation();
-  const setPickupLocation = useAuthStore((state) => state.setPickupLocation);
-  const setDestinationLocation = useAuthStore((state) => state.setDestinationLocation);
-  const { location, getCurrentLocation } = useContext(LocationContext);
+  const setPickupLocation = useAuthStore(state => state.setPickupLocation);
+  const setDestinationLocation = useAuthStore(
+    state => state.setDestinationLocation,
+  );
+  const {location, getCurrentLocation} = useContext(LocationContext);
 
   const [pickupSelected, setPickupSelected] = useState(false);
   const [dropSelected, setDropSelected] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [activeType, setActiveType] = useState<'pickup' | 'drop' | null>(null);
-  const [currentLocationAddress, setCurrentLocationAddress] = useState('Current Location');
+  const [currentLocationAddress, setCurrentLocationAddress] =
+    useState('Current Location');
   const [isCurrentLocation, setIsCurrentLocation] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
+  const [geocodeCache, setGeocodeCache] = useState<{[key: string]: string}>({});
+
+  // Flags to prevent multiple API calls
+  const hasReverseGeocoded = useRef(false);
+  const geocodingInProgress = useRef(false);
+
+  // Session-level cache to persist across component re-renders
+  const sessionGeocodeCache = useRef<{[key: string]: string}>({});
 
   // Create separate refs for pickup and drop inputs
   const pickupSearchRef = useRef<any>(null);
   const dropSearchRef = useRef<any>(null);
 
-  // Get current location on component mount and set as pickup only if no pickup is selected
+  // Reset the geocoding flag when component mounts
   useEffect(() => {
-    const fetchCurrentLocation = async () => {
-      await getCurrentLocation();
-      if (location && !pickupSelected) {
-        // console.log('current location', location);
-        // Reverse geocode to get address from coordinates
-        try {
-          const response = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=AIzaSyDGQZ-LNDI4iv5CyqdU3BX5dl9PaEpOfrQ`
-          );
-          const data = await response.json();
-          if (data.results && data.results.length > 0) {
-            const address = data.results[0].formatted_address;
-            // Only set pickup location if no pickup has been selected yet
-            setPickupLocation({ 
-              lat: location.latitude, 
-              lng: location.longitude, 
-              description: address 
-            });
-            setPickupSelected(true);
-            setIsCurrentLocation(true);
-            setCurrentLocationAddress('Current Location'); // Keep showing "Current Location"
-            console.log('pickup location set to current location');
-          }
-        } catch (error) {
-          console.log('error getting address', error);
-          console.error('Error getting address:', error);
-          setCurrentLocationAddress('Select Location');
+    hasReverseGeocoded.current = false;
+    geocodingInProgress.current = false;
+  }, []);
+
+  // Set current location as pickup on screen focus (with safeguards)
+  useFocusEffect(
+    React.useCallback(() => {
+      const setCurrentLocationAsPickup = async () => {
+        // Multiple safeguards to prevent repeated API calls
+        if (
+          !location ||
+          pickupSelected ||
+          hasReverseGeocoded.current ||
+          geocodingInProgress.current
+        ) {
+          console.log('Skipping auto-set pickup:', {
+            hasLocation: !!location,
+            pickupSelected,
+            hasReverseGeocoded: hasReverseGeocoded.current,
+            geocodingInProgress: geocodingInProgress.current,
+          });
+          return;
         }
-      }
-    };
 
-    fetchCurrentLocation();
-  }, [location, getCurrentLocation, setPickupLocation, pickupSelected]);
+        console.log('Auto-setting current location as pickup');
+        hasReverseGeocoded.current = true; // Prevent repeated attempts
+        geocodingInProgress.current = true; // Prevent concurrent calls
 
-  const handleSelect = (coords: { lat: number; lng: number }, description: string) => {
+        const cacheKey = `${location.latitude.toFixed(
+          4,
+        )},${location.longitude.toFixed(4)}`;
+
+        // Check session cache first
+        if (sessionGeocodeCache.current[cacheKey]) {
+          // Use session cached result
+          setPickupLocation({
+            lat: location.latitude,
+            lng: location.longitude,
+            description: sessionGeocodeCache.current[cacheKey],
+          });
+          setCurrentLocationAddress('Current Location');
+          setIsCurrentLocation(true);
+          setPickupSelected(true);
+          geocodingInProgress.current = false; // Reset flag
+          console.log('Auto-set pickup to current location (session cached)');
+        } else if (geocodeCache[cacheKey]) {
+          // Use cached result
+          setPickupLocation({
+            lat: location.latitude,
+            lng: location.longitude,
+            description: geocodeCache[cacheKey],
+          });
+          setCurrentLocationAddress('Current Location');
+          setIsCurrentLocation(true);
+          setPickupSelected(true);
+          geocodingInProgress.current = false; // Reset flag
+          console.log('Auto-set pickup to current location (cached)');
+        } else {
+          // Make geocoding API call (only once per location)
+          console.log(
+            'Making geocoding API call for auto-set pickup:',
+            cacheKey,
+          );
+          try {
+            const response = await fetch(
+              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=AIzaSyDGQZ-LNDI4iv5CyqdU3BX5dl9PaEpOfrQ`,
+            );
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+              const address = data.results[0].formatted_address;
+              // Cache the result in both session and state
+              sessionGeocodeCache.current[cacheKey] = address;
+              setGeocodeCache(prev => ({...prev, [cacheKey]: address}));
+              setPickupLocation({
+                lat: location.latitude,
+                lng: location.longitude,
+                description: address,
+              });
+              setCurrentLocationAddress('Current Location');
+              setIsCurrentLocation(true);
+              setPickupSelected(true);
+              geocodingInProgress.current = false; // Reset flag
+              console.log('Auto-set pickup to current location');
+            }
+          } catch (error) {
+            console.log('error getting address for auto-set pickup', error);
+            console.error('Error getting address:', error);
+            // Fallback to coordinates only
+            setPickupLocation({
+              lat: location.latitude,
+              lng: location.longitude,
+              description: 'Current Location',
+            });
+            setCurrentLocationAddress('Current Location');
+            setIsCurrentLocation(true);
+            setPickupSelected(true);
+            geocodingInProgress.current = false; // Reset flag
+          } finally {
+            geocodingInProgress.current = false; // Always reset flag
+          }
+        }
+      };
+
+      setCurrentLocationAsPickup();
+    }, [location?.latitude, location?.longitude, pickupSelected]), // More specific dependencies
+  );
+
+  // REMOVED: Automatic geocoding on screen focus
+  // Now geocoding will only happen when user explicitly selects "Use Current Location"
+
+  const handleSelect = (
+    coords: {lat: number; lng: number},
+    description: string,
+  ) => {
     if (activeType === 'pickup') {
-      console.log('Setting pickup location:', { lat: coords.lat, lng: coords.lng, description });
-      setPickupLocation({ lat: coords.lat, lng: coords.lng, description });
+      console.log('Setting pickup location:', {
+        lat: coords.lat,
+        lng: coords.lng,
+        description,
+      });
+      setPickupLocation({lat: coords.lat, lng: coords.lng, description});
       setPickupSelected(true);
       setActiveType(null);
       setIsCurrentLocation(false); // User selected a different location
@@ -91,8 +185,12 @@ export default function Location() {
         Alert.alert('Please select your pickup location first');
         return;
       }
-      console.log('Setting destination location:', { lat: coords.lat, lng: coords.lng, description });
-      setDestinationLocation({ lat: coords.lat, lng: coords.lng, description });
+      console.log('Setting destination location:', {
+        lat: coords.lat,
+        lng: coords.lng,
+        description,
+      });
+      setDestinationLocation({lat: coords.lat, lng: coords.lng, description});
       setDropSelected(true);
       setActiveType(null);
     }
@@ -112,22 +210,38 @@ export default function Location() {
   if (pickupSelected && dropSelected) {
     // Get the current locations from the store
     const currentPickupLocation = useAuthStore.getState().pickupLocation;
-    const currentDestinationLocation = useAuthStore.getState().destinationLocation;
-    
-    console.log('Navigating to TripDetails with pickup:', currentPickupLocation);
-    console.log('Navigating to TripDetails with destination:', currentDestinationLocation);
-    
-    setTimeout(() => navigation.replace('TripDetails', {
-      pickupLocation: currentPickupLocation,
-      destinationLocation: currentDestinationLocation
-    }), 100);
+    const currentDestinationLocation =
+      useAuthStore.getState().destinationLocation;
+
+    console.log(
+      'Navigating to TripDetails with pickup:',
+      currentPickupLocation,
+    );
+    console.log(
+      'Navigating to TripDetails with destination:',
+      currentDestinationLocation,
+    );
+
+    setTimeout(
+      () =>
+        navigation.replace('TripDetails', {
+          pickupLocation: currentPickupLocation,
+          destinationLocation: currentDestinationLocation,
+        }),
+      100,
+    );
   }
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Ionicons name="chevron-back" size={24} color={Gold} onPress={() => navigation.goBack()} />
+        <Ionicons
+          name="chevron-back"
+          size={24}
+          color={Gold}
+          onPress={() => navigation.goBack()}
+        />
         <Text style={styles.headerText}>Select Locations</Text>
       </View>
 
@@ -176,33 +290,129 @@ export default function Location() {
             <FlatList
               data={[
                 // Add "Use Current Location" option when searching for pickup
-                ...(activeType === 'pickup' ? [{
-                  description: 'Use Current Location',
-                  place_id: 'current_location'
-                }] : []),
-                ...suggestions
+                ...(activeType === 'pickup'
+                  ? [
+                      {
+                        description: 'Use Current Location',
+                        place_id: 'current_location',
+                      },
+                    ]
+                  : []),
+                ...suggestions,
               ]}
-              keyExtractor={(item) => item.place_id}
-              renderItem={({ item }) => (
+              keyExtractor={item => item.place_id}
+              renderItem={({item}) => (
                 <TouchableOpacity
                   style={[
                     styles.suggestionItem,
-                    item.place_id === 'current_location' && styles.currentLocationItem
+                    item.place_id === 'current_location' &&
+                      styles.currentLocationItem,
                   ]}
-                  onPress={() => {
+                  onPress={async () => {
                     if (item.place_id === 'current_location') {
-                      // Handle current location selection
-                      if (location) {
-                        setPickupLocation({ 
-                          lat: location.latitude, 
-                          lng: location.longitude, 
-                          description: 'Current Location' 
-                        });
-                        setCurrentLocationAddress('Current Location');
-                        setIsCurrentLocation(true);
-                        setPickupSelected(true);
-                        setActiveType(null);
-                        setSuggestions([]);
+                      // Handle current location selection with geocoding
+                      if (location && !geocodingInProgress.current) {
+                        geocodingInProgress.current = true; // Prevent concurrent calls
+
+                        const handleCurrentLocationSelection = async () => {
+                          const cacheKey = `${location.latitude.toFixed(
+                            4,
+                          )},${location.longitude.toFixed(4)}`;
+
+                          // Check session cache first
+                          if (sessionGeocodeCache.current[cacheKey]) {
+                            // Use session cached result
+                            setPickupLocation({
+                              lat: location.latitude,
+                              lng: location.longitude,
+                              description:
+                                sessionGeocodeCache.current[cacheKey],
+                            });
+                            setCurrentLocationAddress('Current Location');
+                            setIsCurrentLocation(true);
+                            setPickupSelected(true);
+                            setActiveType(null);
+                            setSuggestions([]);
+                            geocodingInProgress.current = false; // Reset flag
+                            console.log(
+                              'pickup location set to current location (session cached)',
+                            );
+                          } else if (geocodeCache[cacheKey]) {
+                            // Use cached result
+                            setPickupLocation({
+                              lat: location.latitude,
+                              lng: location.longitude,
+                              description: geocodeCache[cacheKey],
+                            });
+                            setCurrentLocationAddress('Current Location');
+                            setIsCurrentLocation(true);
+                            setPickupSelected(true);
+                            setActiveType(null);
+                            setSuggestions([]);
+                            geocodingInProgress.current = false; // Reset flag
+                            console.log(
+                              'pickup location set to current location (cached)',
+                            );
+                          } else {
+                            // Make geocoding API call
+                            console.log(
+                              'Making geocoding API call for current location:',
+                              cacheKey,
+                            );
+                            try {
+                              const response = await fetch(
+                                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=AIzaSyDGQZ-LNDI4iv5CyqdU3BX5dl9PaEpOfrQ`,
+                              );
+                              const data = await response.json();
+                              if (data.results && data.results.length > 0) {
+                                const address =
+                                  data.results[0].formatted_address;
+                                // Cache the result in both session and state
+                                sessionGeocodeCache.current[cacheKey] = address;
+                                setGeocodeCache(prev => ({
+                                  ...prev,
+                                  [cacheKey]: address,
+                                }));
+                                setPickupLocation({
+                                  lat: location.latitude,
+                                  lng: location.longitude,
+                                  description: address,
+                                });
+                                setCurrentLocationAddress('Current Location');
+                                setIsCurrentLocation(true);
+                                setPickupSelected(true);
+                                setActiveType(null);
+                                setSuggestions([]);
+                                geocodingInProgress.current = false; // Reset flag
+                                console.log(
+                                  'pickup location set to current location',
+                                );
+                              }
+                            } catch (error) {
+                              console.log(
+                                'error getting address for current location',
+                                error,
+                              );
+                              console.error('Error getting address:', error);
+                              // Fallback to coordinates only
+                              setPickupLocation({
+                                lat: location.latitude,
+                                lng: location.longitude,
+                                description: 'Current Location',
+                              });
+                              setCurrentLocationAddress('Current Location');
+                              setIsCurrentLocation(true);
+                              setPickupSelected(true);
+                              setActiveType(null);
+                              setSuggestions([]);
+                              geocodingInProgress.current = false; // Reset flag
+                            } finally {
+                              geocodingInProgress.current = false; // Always reset flag
+                            }
+                          }
+                        };
+
+                        handleCurrentLocationSelection();
                       }
                     } else {
                       handleSuggestionSelect(item.place_id, item.description);
@@ -210,12 +420,19 @@ export default function Location() {
                   }}>
                   <View style={styles.suggestionContent}>
                     {item.place_id === 'current_location' && (
-                      <Ionicons name="location" size={18} color={Gold} style={styles.suggestionIcon} />
+                      <Ionicons
+                        name="location"
+                        size={18}
+                        color={Gold}
+                        style={styles.suggestionIcon}
+                      />
                     )}
-                    <Text style={[
-                      styles.suggestionText,
-                      item.place_id === 'current_location' && styles.currentLocationText
-                    ]}>
+                    <Text
+                      style={[
+                        styles.suggestionText,
+                        item.place_id === 'current_location' &&
+                          styles.currentLocationText,
+                      ]}>
                       {item.description}
                     </Text>
                   </View>
@@ -234,7 +451,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Black,
     paddingHorizontal: 20,
-    paddingTop: 10
+    paddingTop: 10,
   },
   header: {
     flexDirection: 'row',
