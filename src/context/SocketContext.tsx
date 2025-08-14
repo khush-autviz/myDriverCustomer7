@@ -100,7 +100,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       return;
     }
 
-          const newSocket = io('https://api.mydriversa.co.za/', {
+    const newSocket = io('https://api.mydriversa.co.za', {
       auth: {
         access_token: accessToken,
       },

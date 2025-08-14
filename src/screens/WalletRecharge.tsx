@@ -61,7 +61,7 @@ export default function WalletRecharge() {
       if (approvalUrl) {
         setPaypalUrl(approvalUrl);
         setShowWebView(true);
-        ShowToast('Redirecting to PayPal...', { type: 'info' });
+        ShowToast('Redirecting to PayFast...', { type: 'info' });
       } else {
         ShowToast('Payment order created but no approval URL received', { type: 'error' });
       }

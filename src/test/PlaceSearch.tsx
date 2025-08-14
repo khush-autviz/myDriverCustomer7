@@ -8,7 +8,7 @@ import React, {
 import {View, TextInput, StyleSheet, ActivityIndicator} from 'react-native';
 import axios from 'axios';
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyDGQZ-LNDI4iv5CyqdU3BX5dl9PaEpOfrQ';
+const GOOGLE_MAPS_API_KEY = 'AIzaSyCD1L-TRXFfxXI0H8TSakx84C_x7NIIrJ4';
 
 interface Prediction {
   description: string;

@@ -40,7 +40,7 @@ export default function TripDetails() {
 
   const rideId = useAuthStore(state => state.rideId)
 
-  // Log the locations received from route params
+// Log the locations received from route params
   console.log('TripDetails - pickupLocation from route params:', pickupLocation);
   console.log('TripDetails - destinationLocation from route params:', destinationLocation);
 
@@ -73,13 +73,13 @@ export default function TripDetails() {
   const pickupCoord =
     pickupLocation && pickupLocation.lat !== undefined && pickupLocation.lng !== undefined
       // ? { latitude: pickupLocation.lat, longitude: pickupLocation.lng }
-      ? { latitude: pickupLocation.lng, longitude: pickupLocation.lat }
+      ? { latitude: pickupLocation.lat, longitude: pickupLocation.lng }
       : undefined;
 
   const destinationCoord =
     destinationLocation && destinationLocation.lat !== undefined && destinationLocation.lng !== undefined
       // ? { latitude: destinationLocation.lat, longitude: destinationLocation.lng }
-      ? { latitude: destinationLocation.lng, longitude: destinationLocation.lat }
+      ? { latitude: destinationLocation.lat, longitude: destinationLocation.lng }
       : undefined;
 
   // Add re-center function
@@ -251,7 +251,7 @@ export default function TripDetails() {
   }, [navigation]);
 
   const handleDriverLocation = useCallback((data: any) => {
-    console.log('driver location', data);
+    console.log('driver location', data.coords.latitude, data.coords.longitude);
     setdriverLocation({
       latitude: data.coords.latitude,
       longitude: data.coords.longitude
@@ -495,7 +495,7 @@ export default function TripDetails() {
           <MapViewDirections
             origin={routeDirections.origin}
             destination={routeDirections.destination}
-            apikey='AIzaSyDGQZ-LNDI4iv5CyqdU3BX5dl9PaEpOfrQ'
+            apikey='AIzaSyCD1L-TRXFfxXI0H8TSakx84C_x7NIIrJ4'
             strokeColor={Gold}
             strokeWidth={4}
 
@@ -698,6 +698,166 @@ export default function TripDetails() {
                         </TouchableOpacity>
                       </TouchableOpacity>
                     </View>
+
+                    {/* Beautiful Fellow Driver Card - Inline CSS */}
+                    <View style={{
+                      backgroundColor: 'rgba(255, 215, 0, 0.08)',
+                      // borderColor: Gold,
+                      // borderWidth: 2,
+                      borderRadius: 16,
+                      padding: 10,
+                      marginTop: 10,
+                      // shadowColor: Gold,
+                      // shadowOffset: { width: 0, height: 4 },
+                      // shadowOpacity: 0.15,
+                      // shadowRadius: 8,
+                      // elevation: 5,
+                    }}>
+                      {/* <Image 
+                              source={{ uri: `https://api.mydriversa.co.za/${rideInfo?.data?.data?.ride?.felowDriver?.profilePhoto}` }}
+                              style={{
+                                width: 56,
+                                height: 56,
+                                borderRadius: 28,
+                              }}
+                              resizeMode="cover"
+                            /> */}
+                        <Text style={{
+                          color: Gold,
+                          fontSize: 16,
+                          fontWeight: '700',
+                        }}>
+                          Fellow Driver
+                        </Text>
+                      
+                      
+                      {/* Content */}
+                      <View style={{  }}>
+                        {/* Driver Name */}
+                        <View style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingVertical: 8,
+                        }}>
+                          <View style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 16,
+                            backgroundColor: 'rgba(255, 215, 0, 0.15)',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: 12,
+                          }}>
+                            <Image 
+                              source={{ uri: `https://api.mydriversa.co.za/${rideInfo?.data?.data?.ride?.felowDriver?.profilePhoto}` }}
+                              style={{
+                                width: 35,
+                                height: 35,
+                                borderRadius: 16,
+                              }}
+                              resizeMode="cover"
+                            />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{
+                              color: LightGold,
+                              fontSize: 12,
+                              fontWeight: '600',
+                              marginBottom: 2,
+                              textTransform: 'uppercase',
+                              letterSpacing: 0.5,
+                            }}>
+                              Name
+                            </Text>
+                            <Text style={{
+                              color: White,
+                              fontSize: 14,
+                              fontWeight: '600',
+                            }}>
+                              {rideInfo?.data?.data?.ride?.felowDriver?.name || 'Not specified'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Driver Mobile */}
+                        <View style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingVertical: 8,
+                        }}>
+                          <View style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 16,
+                            backgroundColor: 'rgba(255, 215, 0, 0.15)',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: 12,
+                          }}>
+                            <Ionicons name="call" size={16} color={Gold} />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{
+                              color: LightGold,
+                              fontSize: 12,
+                              fontWeight: '600',
+                              marginBottom: 2,
+                              textTransform: 'uppercase',
+                              letterSpacing: 0.5,
+                            }}>
+                              Mobile
+                            </Text>
+                            <Text style={{
+                              color: White,
+                              fontSize: 14,
+                              fontWeight: '600',
+                            }}>
+                              {rideInfo?.data?.data?.ride?.felowDriver?.mobileNumber || 'Not specified'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Driver Gender */}
+                        <View style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingVertical: 8,
+                        }}>
+                          <View style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 16,
+                            backgroundColor: 'rgba(255, 215, 0, 0.15)',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: 12,
+                          }}>
+                            <Ionicons name="male-female" size={16} color={Gold} />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{
+                              color: LightGold,
+                              fontSize: 12,
+                              fontWeight: '600',
+                              marginBottom: 2,
+                              textTransform: 'uppercase',
+                              letterSpacing: 0.5,
+                            }}>
+                              Gender
+                            </Text>
+                            <Text style={{
+                              color: White,
+                              fontSize: 14,
+                              fontWeight: '600',
+                            }}>
+                              {rideInfo?.data?.data?.ride?.felowDriver?.gender || 'Not specified'}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+
+
                   </View>
                   
                   {/* Trip Route Card */}
@@ -866,6 +1026,156 @@ export default function TripDetails() {
                           </Text>
                         </TouchableOpacity>
                       </TouchableOpacity>
+                    </View>
+
+
+                    <View style={{
+                      backgroundColor: 'rgba(255, 215, 0, 0.08)',
+                      // borderColor: Gold,
+                      // borderWidth: 2,
+                      borderRadius: 16,
+                      padding: 10,
+                      marginTop: 10,
+                      // shadowColor: Gold,
+                      // shadowOffset: { width: 0, height: 4 },
+                      // shadowOpacity: 0.15,
+                      // shadowRadius: 8,
+                      // elevation: 5,
+                    }}>
+                      
+                        <Text style={{
+                          color: Gold,
+                          fontSize: 16,
+                          fontWeight: '700',
+                        }}>
+                          Fellow Driver
+                        </Text>
+                      
+                      
+                      {/* Content */}
+                      <View style={{  }}>
+                        {/* Driver Name */}
+                        <View style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingVertical: 8,
+                        }}>
+                          <View style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 16,
+                            backgroundColor: 'rgba(255, 215, 0, 0.15)',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: 12,
+                          }}>
+                             <Image 
+                              source={{ uri: `https://api.mydriversa.co.za/${rideInfo?.data?.data?.ride?.felowDriver?.profilePhoto}` }}
+                              style={{
+                                width: 35,
+                                height: 35,
+                                borderRadius: 16,
+                              }}
+                              resizeMode="cover"
+                            />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{
+                              color: LightGold,
+                              fontSize: 12,
+                              fontWeight: '600',
+                              marginBottom: 2,
+                              textTransform: 'uppercase',
+                              letterSpacing: 0.5,
+                            }}>
+                              Name
+                            </Text>
+                            <Text style={{
+                              color: White,
+                              fontSize: 14,
+                              fontWeight: '600',
+                            }}>
+                              {rideInfo?.data?.data?.ride?.felowDriver?.name || 'Not specified'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Driver Mobile */}
+                        <View style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingVertical: 8,
+                        }}>
+                          <View style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 16,
+                            backgroundColor: 'rgba(255, 215, 0, 0.15)',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: 12,
+                          }}>
+                            <Ionicons name="call" size={16} color={Gold} />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{
+                              color: LightGold,
+                              fontSize: 12,
+                              fontWeight: '600',
+                              marginBottom: 2,
+                              textTransform: 'uppercase',
+                              letterSpacing: 0.5,
+                            }}>
+                              Mobile
+                            </Text>
+                            <Text style={{
+                              color: White,
+                              fontSize: 14,
+                              fontWeight: '600',
+                            }}>
+                              {rideInfo?.data?.data?.ride?.felowDriver?.mobileNumber || 'Not specified'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Driver Gender */}
+                        <View style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingVertical: 8,
+                        }}>
+                          <View style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 16,
+                            backgroundColor: 'rgba(255, 215, 0, 0.15)',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: 12,
+                          }}>
+                            <Ionicons name="male-female" size={16} color={Gold} />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{
+                              color: LightGold,
+                              fontSize: 12,
+                              fontWeight: '600',
+                              marginBottom: 2,
+                              textTransform: 'uppercase',
+                              letterSpacing: 0.5,
+                            }}>
+                              Gender
+                            </Text>
+                            <Text style={{
+                              color: White,
+                              fontSize: 14,
+                              fontWeight: '600',
+                            }}>
+                              {rideInfo?.data?.data?.ride?.felowDriver?.gender || 'Not specified'}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
                     </View>
                   </View>
 
