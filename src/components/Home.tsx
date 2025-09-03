@@ -1,4 +1,4 @@
-import React, { use, useEffect } from 'react';
+import React, {use, useEffect, useState} from 'react';
 import {
   View,
   StyleSheet,
@@ -17,29 +17,51 @@ import {
   White,
 } from '../constants/Color';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
-import { useAuthStore } from '../store/authStore';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {useAuthStore} from '../store/authStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useLocation } from '../context/LocationProvider';
-import { ShowToast } from '../lib/Toast';
+import {useLocation} from '../context/LocationProvider';
+import {ShowToast} from '../lib/Toast';
 
 export default function Home() {
   const navigation: any = useNavigation();
-  const { user } = useAuthStore()
-  const { location } = useLocation()
+  const {user} = useAuthStore();
+  const {location, getCurrentLocation} = useLocation();
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
-  // console.log('location', location);
+  // Fetch location when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchLocationOnFocus = async () => {
+        if (!location) {
+          console.log('No location found on Home screen focus, fetching...');
+          setIsLoadingLocation(true);
+          try {
+            await getCurrentLocation();
+          } catch (error) {
+            console.error('Error fetching location on focus:', error);
+          } finally {
+            setIsLoadingLocation(false);
+          }
+        }
+      };
+
+      fetchLocationOnFocus();
+    }, [location, getCurrentLocation]),
+  );
+
+  // Debug logging
+  console.log('Home component - location:', location);
 
   const handleSearch = () => {
+    console.log('handleSearch called, location:', location);
+
     if (!location) {
-      ShowToast('Please enable location services to continue',
-        {type: 'error',}
-      );
+      ShowToast('Please enable location services to continue', {type: 'error'});
       return;
     }
     navigation.navigate('Location');
-  }
-
+  };
 
   return (
     <>
@@ -64,15 +86,10 @@ export default function Home() {
             name="search"
             size={24}
             color={Gray}
-            style={{ paddingStart: 10 }}
+            style={{paddingStart: 10}}
           />
-          <TouchableOpacity
-            style={styles.searchInput}
-            onPress={handleSearch}
-          >
-            <Text style={styles.searchText}>
-              Where would you like to go?
-            </Text>
+          <TouchableOpacity style={styles.searchInput} onPress={handleSearch}>
+            <Text style={styles.searchText}>Where would you like to go?</Text>
           </TouchableOpacity>
         </View>
 
@@ -146,7 +163,7 @@ export default function Home() {
         </View> */}
 
         {/* Bottom spacing */}
-        <View style={{ height: 20 }} />
+        <View style={{height: 20}} />
       </ScrollView>
     </>
   );
