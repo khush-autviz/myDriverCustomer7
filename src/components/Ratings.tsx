@@ -20,6 +20,7 @@ export default function Ratings() {
   const { rideId: ride_id2 } = route.params;
   const rideId = ride_id1 ?? ride_id2;
 
+  
   // ratigns mutation
   const ratingsMutation = useMutation({
     mutationFn: (data: any) => ratingRide(data, rideId),

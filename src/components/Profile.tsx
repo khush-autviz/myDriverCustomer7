@@ -1,13 +1,13 @@
-import { View, Text, Image, TouchableOpacity, TextInput, Platform, ActivityIndicator, ScrollView, KeyboardAvoidingView } from 'react-native'
+import { View, Text, Image, TouchableOpacity, TextInput, Platform, ActivityIndicator, ScrollView, KeyboardAvoidingView, Modal } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { Black, Gold, Gray, White, LightGold } from '../constants/Color'
+import { Black, Gold, Gray, White, LightGold, Maroon } from '../constants/Color'
 import { useAuthStore } from '../store/authStore'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { launchImageLibrary, ImageLibraryOptions } from 'react-native-image-picker'
-import { editProfile, getProfile } from '../constants/Api'
+import { editProfile, getProfile, deleteAccount } from '../constants/Api'
 import { ShowToast } from '../lib/Toast'
 import Loader from './Loader'
 
@@ -15,7 +15,7 @@ import Loader from './Loader'
 export default function Profile() {
   // const USER = useAuthStore(state => state.user)
   const [buttonDisabled, setbuttonDisabled] = useState(true)
-  const { user, setUser } = useAuthStore()
+  const { user, setUser , setToken} = useAuthStore()
   const navigation: any = useNavigation()
   const [data, setdata] = useState<any>({
     firstName: '',
@@ -23,6 +23,7 @@ export default function Profile() {
     email: '',
     // profileImage: null
   })
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
 
   // handle data
@@ -135,6 +136,36 @@ export default function Profile() {
     updateProfileMutation.mutateAsync(formData)
   }
 
+  // Delete account mutation
+  const deleteAccountMutation = useMutation({
+    mutationFn: deleteAccount,
+    onSuccess: (response) => {
+      console.log('Account deleted successfully', response);
+      setShowDeleteModal(false);
+      ShowToast('Account deleted successfully', { type: 'success' });
+      setUser({} as any)
+      setToken({} as any)
+       navigation.reset({
+         index: 0,
+         routes: [{ name: 'Signin' }],
+       });
+    
+    },
+    onError: (error: any) => {
+      console.error('Delete account error:', error);
+      ShowToast(error?.response?.data?.message || error?.message || 'Failed to delete account', { type: 'error' });
+    }
+  });
+
+  const confirmDeleteAccount = () => {
+    // Call the delete account API with phone number
+    if (user?.phone) {
+      deleteAccountMutation.mutateAsync({ phone: user.phone });
+    } else {
+      ShowToast('Phone number not found', { type: 'error' });
+    }
+  };
+
 
   useEffect(() => {
     if (UserDetails) {
@@ -151,6 +182,11 @@ export default function Profile() {
 
   }, [UserDetails]);
 
+  // handle delete account
+  const handleDeleteAccount = () => {
+    setShowDeleteModal(true)
+  }
+
 
   console.log('profile image', data.profileImage);
   
@@ -163,6 +199,134 @@ export default function Profile() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
     <SafeAreaView style={styles.container}>
       {isLoading && <Loader />}
+      
+      {/* Custom Delete Confirmation Modal */}
+      <Modal
+        visible={showDeleteModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(26, 26, 26, 0.8)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 20,
+        }}>
+          <View style={{
+            backgroundColor: Black,
+            borderRadius: 20,
+            padding: 30,
+            width: '100%',
+            maxWidth: 350,
+            borderWidth: 2,
+            borderColor: Gold,
+            // shadowColor: Gold,
+            // shadowOffset: { width: 0, height: 8 },
+            // shadowOpacity: 0.3,
+            // shadowRadius: 16,
+            // elevation: 8,
+          }}>
+            {/* Warning Icon */}
+            <View style={{
+              alignSelf: 'center',
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: 'rgba(139, 58, 58, 0.1)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 20,
+            }}>
+              <Ionicons name="warning" size={30} color={Maroon} />
+            </View>
+
+            {/* Title */}
+            <Text style={{
+              fontSize: 24,
+              fontWeight: 'bold',
+              color: White,
+              textAlign: 'center',
+              marginBottom: 15,
+            }}>
+              Delete Account
+            </Text>
+
+            {/* Message */}
+            <Text style={{
+              fontSize: 16,
+              color: Gray,
+              textAlign: 'center',
+              lineHeight: 22,
+              marginBottom: 30,
+            }}>
+              Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.
+            </Text>
+
+            {/* Action Buttons */}
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              gap: 15,
+            }}>
+              {/* Cancel Button */}
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  backgroundColor: 'transparent',
+                  borderWidth: 2,
+                  borderColor: Gray,
+                  borderRadius: 12,
+                  paddingVertical: 15,
+                  alignItems: 'center',
+                }}
+                onPress={() => setShowDeleteModal(false)}
+                disabled={deleteAccountMutation.isPending}
+              >
+                <Text style={{
+                  fontSize: 16,
+                  fontWeight: '600',
+                  color: Gray,
+                }}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+
+              {/* Delete Button */}
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  backgroundColor: deleteAccountMutation.isPending ? 'rgba(139, 58, 58, 0.6)' : Maroon,
+                  borderRadius: 12,
+                  paddingVertical: 15,
+                  alignItems: 'center',
+                  shadowColor: Maroon,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+                onPress={confirmDeleteAccount}
+                disabled={deleteAccountMutation.isPending}
+              >
+                {deleteAccountMutation.isPending ? (
+                  <ActivityIndicator size="small" color={White} />
+                ) : (
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: White,
+                  }}>
+                    Delete
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
@@ -269,6 +433,12 @@ export default function Profile() {
                 <Text style={styles.updateButtonText}>Update Profile</Text>
               </>
             )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDeleteAccount}
+          >
+            <Text style={styles.deleteButtonText}>Delete Account</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -391,5 +561,20 @@ const styles = {
     fontSize: 18,
     fontWeight: '700' as const,
     marginLeft: 8,
+  },
+  deleteButton: {
+    backgroundColor: Maroon,
+    borderRadius: 16,
+    paddingVertical: 16,
+    marginTop: 10,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: 10,
+  },
+  deleteButtonText: {
+    color: White,
+    fontSize: 18,
+    fontWeight: '700' as const,
   },
 }

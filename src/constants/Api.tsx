@@ -94,3 +94,10 @@ export const captureWalletTopup = async (id: any) => {
     const response = await axios.post(`/wallet/paypal/capture/${id}`)
     return response
 }
+
+//delete account
+export const deleteAccount = async (data: any) => {
+    console.log('data to delete account', data);
+    const response = await axios.post('/auth/delete-account', data)
+    return response
+}

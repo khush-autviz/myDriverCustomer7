@@ -9,7 +9,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { LocationContext } from '../context/LocationProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '../store/authStore';
-import MapViewDirections from 'react-native-maps-directions';
+// import MapViewDirections from 'react-native-maps-directions';
 import { useSocket } from '../context/SocketContext';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { calculateRidePrice, cancelRide, CreateRide, getRideDetails } from '../constants/Api';
@@ -200,9 +200,18 @@ export default function TripDetails() {
 
   useEffect(() => {
     if (pickupCoord && destinationCoord) {
+
+      console.log("PRICE Ride COORD", pickupCoord, destinationCoord);
+      
       const data = {
-        pickupCoords: pickupCoord,
-        destinationCoords: destinationCoord,
+        pickupCoords: {
+          latitude: pickupCoord.longitude,
+          longitude: pickupCoord.latitude
+        },
+        destinationCoords: {
+          latitude: destinationCoord.longitude,
+          longitude: destinationCoord.latitude
+        }
       }
       RidePriceMutation.mutateAsync(data)
     }
@@ -492,14 +501,14 @@ export default function TripDetails() {
             </Marker>
           )}
 
-          <MapViewDirections
+          {/* <MapViewDirections
             origin={routeDirections.origin}
             destination={routeDirections.destination}
             apikey='AIzaSyCD1L-TRXFfxXI0H8TSakx84C_x7NIIrJ4'
             strokeColor={Gold}
             strokeWidth={4}
 
-          />
+          /> */}
 
         </MapView>
 
@@ -660,6 +669,18 @@ export default function TripDetails() {
                         <Ionicons name="person" size={24} color={Gold} />
                       </View> */}
                       <View style={styles.driverInfo}>
+                      <Image 
+                              source={{ uri: `https://api.mydriversa.co.za/${rideInfo?.data?.data?.ride?.driver?.documents?.profilePhoto.image}` }}
+                             
+                              
+                              style={{
+                                width: 35,
+                                height: 35,
+                                borderRadius: 16,
+                              }}
+                              resizeMode="cover"
+                              alt='...'
+                            />
                         <Text style={styles.driverName}>
                           {rideInfo?.data?.data?.ride?.driver?.firstName ?? driverDetails?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName ?? driverDetails?.lastName}
                         </Text>
@@ -677,7 +698,7 @@ export default function TripDetails() {
 
                     <View style={styles.vehicleInfo}>
                       <View style={styles.vehicleDetail}>
-                        <Ionicons name="car" size={18} color={Gold} />
+                        <Ionicons name="car" size={20} color={Gold} />
                         <Text style={styles.vehicleText}>
                           {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand ?? driverDetails?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model ?? driverDetails?.vehicleDetails?.model}
                         </Text>
@@ -690,7 +711,7 @@ export default function TripDetails() {
                         </Text>
                       </View>
                       <TouchableOpacity style={styles.vehicleDetail}>
-                        <Ionicons name="call" size={18} color={Gold} />
+                        <Ionicons name="call" size={20} color={Gold} />
                         <TouchableOpacity onPress={() => Linking.openURL(`tel:${rideInfo?.data?.data?.ride?.driver?.phone ?? driverDetails?.phone}`)}>
                           <Text style={styles.vehicleText}>
                             {rideInfo?.data?.data?.ride?.driver?.phone ?? driverDetails?.phone}
@@ -995,6 +1016,16 @@ export default function TripDetails() {
                         <Ionicons name="person" size={24} color={Gold} />
                       </View> */}
                       <View style={styles.driverInfo}>
+                      <Image 
+                              source={{ uri: `https://api.mydriversa.co.za/${rideInfo?.data?.data?.ride?.driver?.documents?.profilePhoto.image}` }}
+                              // source={require('../assets/images/user.png')}
+                              style={{
+                                width: 35,
+                                height: 35,
+                                borderRadius: 16,
+                              }}
+                              resizeMode="cover"
+                            />
                         <Text style={styles.driverName}>
                           {rideInfo?.data?.data?.ride?.driver?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName}
                         </Text>
@@ -1473,6 +1504,10 @@ const styles = StyleSheet.create({
   },
   driverInfo: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    // justifyContent: 'space-between',
+    gap: 10,
   },
   driverName: {
     color: Gold,

@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -79,6 +80,10 @@ export default function OtpScreen() {
       style={{flex: 1, backgroundColor: Black}}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
     <SafeAreaView style={styles.safeArea}>
+    <ScrollView
+      contentContainerStyle={styles.scrollContainer}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.container}>
         <TouchableOpacity 
           style={styles.backButton} 
@@ -125,6 +130,7 @@ export default function OtpScreen() {
           </View> */}
         </View>
       </View>
+      </ScrollView>
 
       <TouchableOpacity 
         style={[
@@ -145,6 +151,7 @@ export default function OtpScreen() {
           </Text>
         )}
       </TouchableOpacity>
+      {/* </ScrollView> */}
     </SafeAreaView>
     </KeyboardAvoidingView>
   );
@@ -158,10 +165,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 20,
+    // paddingTop: 20,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    // paddingTop: 20,
+    paddingBottom: 40, // give space for keyboard
   },
   backButton: {
-    marginTop: 10,
+    // marginTop: 10,
   },
   backRow: {
     flexDirection: 'row',
@@ -185,13 +199,13 @@ const styles = StyleSheet.create({
     color: LightGold,
     fontSize: 28,
     fontWeight: '700',
-    marginBottom: 10,
+    marginBottom: 5,
   },
   subText: {
     color: Gray,
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 35,
+    marginBottom: 25,
     maxWidth: '80%',
   },
   otpInputContainer: {
@@ -239,7 +253,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 24,
-    marginBottom: 35,
+    marginBottom: 15,
     shadowColor: Gold,
     shadowOffset: {
       width: 0,
@@ -248,7 +262,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
-  },
+  },  
   verifyButtonDisabled: {
     backgroundColor: 'rgba(212, 175, 55, 0.4)',
     shadowOpacity: 0.1,
