@@ -36,10 +36,15 @@ export default function Home() {
         if (!location) {
           console.log('No location found on Home screen focus, fetching...');
           setIsLoadingLocation(true);
+          
+          
           try {
             await getCurrentLocation();
+          
           } catch (error) {
             console.error('Error fetching location on focus:', error);
+            // Show error toast if location fetch fails
+            ShowToast('Failed to get location. Please check your location settings.', { type: 'error' });
           } finally {
             setIsLoadingLocation(false);
           }
@@ -56,8 +61,15 @@ export default function Home() {
   const handleSearch = () => {
     console.log('handleSearch called, location:', location);
 
+    if (isLoadingLocation) {
+      ShowToast('Please wait, getting your location...', { type: 'info' });
+      return;
+    }
+
     if (!location) {
-      ShowToast('Please enable location services to continue', {type: 'error'});
+      // ShowToast('Please enable location services to continue', {type: 'error'});
+      ShowToast('Please wait, getting your location...', { type: 'info' });
+      getCurrentLocation();
       return;
     }
     navigation.navigate('Location');
@@ -88,8 +100,17 @@ export default function Home() {
             color={Gray}
             style={{paddingStart: 10}}
           />
-          <TouchableOpacity style={styles.searchInput} onPress={handleSearch}>
-            <Text style={styles.searchText}>Where would you like to go?</Text>
+          <TouchableOpacity 
+            style={[styles.searchInput, isLoadingLocation && { opacity: 0.6 }]} 
+            onPress={handleSearch}
+            disabled={isLoadingLocation}
+          >
+            <Text style={styles.searchText}>
+              {isLoadingLocation 
+                ? 'Getting your location...' 
+                : 'Where would you like to go?'
+              }
+            </Text>
           </TouchableOpacity>
         </View>
 

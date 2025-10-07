@@ -144,13 +144,13 @@ export default function WalletRecharge() {
     // Handle PayPal success/cancel URLs
     const url = navState.url;
 
-    if (url.includes('http://localhost:3000/wallet/success')) {
+    if (url.includes('/wallet/success')) {
       setShowWebView(false);
       ShowToast('Payment completed successfully!', { type: 'success' });
       navigation.goBack();
     }
 
-    if (url.includes('http://localhost:3000/wallet/cancel')) {
+    if (url.includes('/wallet/cancel')) {
       setShowWebView(false);
       ShowToast('Payment was cancelled', { type: 'warning' });
     }

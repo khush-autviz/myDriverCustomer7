@@ -34,7 +34,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>We need access to your camera</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We use your location to match you with nearby passenger ride requests and show navigation routes in real time.</string>
+	<string>We use your location to show nearby taxis, estimate fares and pickup times.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>We need to save photos</string>
 	<key>NSPhotoLibraryUsageDescription</key>
