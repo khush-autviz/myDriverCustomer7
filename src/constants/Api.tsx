@@ -94,3 +94,11 @@ export const captureWalletTopup = async (id: any) => {
     const response = await axios.post(`/wallet/paypal/capture/${id}`)
     return response
 }
+
+// update FCM token
+export const updateFcmToken = async (fcmToken: string) => {
+    const response = await axios.post('/fcm/update-token', {
+        fcmToken: fcmToken
+    })
+    return response.data
+}

@@ -495,7 +495,7 @@ export default function TripDetails() {
           <MapViewDirections
             origin={routeDirections.origin}
             destination={routeDirections.destination}
-            apikey='AIzaSyDGQZ-LNDI4iv5CyqdU3BX5dl9PaEpOfrQ'
+            apikey='AIzaSyCD1L-TRXFfxXI0H8TSakx84C_x7NIIrJ4'
             strokeColor={Gold}
             strokeWidth={4}
 

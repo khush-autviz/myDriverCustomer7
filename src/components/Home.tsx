@@ -1,4 +1,4 @@
-import React, { use, useEffect } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,8 @@ import {
   ScrollView,
   Image,
   StatusBar,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import {
   Black,
@@ -22,11 +24,61 @@ import { useAuthStore } from '../store/authStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocation } from '../context/LocationProvider';
 import { ShowToast } from '../lib/Toast';
+import { updateFcmToken } from '../constants/Api';
+import messaging from '@react-native-firebase/messaging';
+
 
 export default function Home() {
   const navigation: any = useNavigation();
   const { user } = useAuthStore()
   const { location } = useLocation()
+  const [fcmToken, setFcmToken] = useState<string | null>(null);
+
+  // FCM Token functions
+  const requestNotificationPermission = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('Notification permission granted');
+        return true;
+      } else {
+        console.log('Notification permission denied');
+        return false;
+      }
+    }
+    return true; // iOS doesn't need explicit permission request here
+  };
+
+  const getFcmTokenAndSendToBackend = async () => {
+    try {
+      // Request permission first
+      const hasPermission = await requestNotificationPermission();
+      if (!hasPermission) {
+        console.log('Cannot get FCM token: permission denied');
+        return;
+      }
+
+      // Get FCM token from Firebase
+      await messaging().registerDeviceForRemoteMessages();
+      const token = await messaging().getToken();
+      console.log('🔥 FCM TOKEN in Home:', token);
+      setFcmToken(token);
+
+      // Send token to backend
+      if (token) {
+        try {
+          const response = await updateFcmToken(token);
+          console.log('✅ FCM token sent to backend successfully:', response);
+        } catch (error) {
+          console.error('❌ Error sending FCM token to backend:', error);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error getting FCM token:', error);
+    }
+  };
 
   // console.log('location', location);
 
@@ -39,6 +91,10 @@ export default function Home() {
     }
     navigation.navigate('Location');
   }
+
+  useEffect(() => {
+    getFcmTokenAndSendToBackend();
+  }, []);
 
 
   return (

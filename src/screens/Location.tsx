@@ -123,7 +123,7 @@ export default function Location() {
           );
           try {
             const response = await fetch(
-              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=AIzaSyDGQZ-LNDI4iv5CyqdU3BX5dl9PaEpOfrQ`,
+              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=AIzaSyCD1L-TRXFfxXI0H8TSakx84C_x7NIIrJ4`,
             );
             const data = await response.json();
             if (data.results && data.results.length > 0) {
@@ -378,7 +378,7 @@ export default function Location() {
                             );
                             try {
                               const response = await fetch(
-                                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=AIzaSyDGQZ-LNDI4iv5CyqdU3BX5dl9PaEpOfrQ`,
+                                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.latitude},${location.longitude}&key=AIzaSyCD1L-TRXFfxXI0H8TSakx84C_x7NIIrJ4`,
                               );
                               const data = await response.json();
                               if (data.results && data.results.length > 0) {

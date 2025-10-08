@@ -1,9 +1,12 @@
 import 'react-native-reanimated';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import messaging from '@react-native-firebase/messaging';
+import notifee, { AndroidImportance } from '@notifee/react-native';
+
 
 import Home from './src/components/Home';
 import Onboarding from './src/screens/Onboarding';
@@ -28,6 +31,7 @@ import Ratings from './src/components/Ratings';
 import RideDetails from './src/components/RideDetails';
 import WalletRecharge from './src/screens/WalletRecharge';
 import TransactionHistory from './src/screens/TransactionHistory';
+import { PermissionsAndroid, Platform } from 'react-native';
 
 
 const Tab = createBottomTabNavigator();
@@ -80,6 +84,72 @@ function MainTabs() {
 }
 
 export default function App() {
+
+  async function requestPermission() {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('Notification permission granted');
+      } else {
+        console.log('Notification permission denied');
+      }
+    }
+    else if (Platform.OS === 'ios') {
+      // Add iOS notification permission request
+      const authStatus = await messaging().requestPermission();
+      const enabled =
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+      if (enabled) {
+        console.log('iOS notification permission granted');
+      } else {
+        console.log('iOS notification permission denied');
+      }
+    }
+  }
+
+  useEffect(() => {
+    requestPermission();
+    // messaging()
+    //   .getToken()
+    //   .then(token => console.log('🔥 FIREBASE FCM TOKEN:', token));
+  }, []);
+
+  // Handle foreground messages
+  useEffect(() => {
+    const unsubscribe = messaging().onMessage(async remoteMessage => {
+      console.log('Foreground message:', remoteMessage);
+
+      // Request permissions if needed
+      await notifee.requestPermission();
+
+      // Create a channel (Android)
+      const channelId = await notifee.createChannel({
+        id: 'default',
+        name: 'Default Channel',
+        importance: AndroidImportance.HIGH,
+      });
+
+      // Display a notification
+      await notifee.displayNotification({
+        title: remoteMessage.notification?.title,
+        body: remoteMessage.notification?.body,
+        android: {
+          channelId,
+          pressAction: {
+            id: 'default',
+          },
+        },
+      });
+    });
+
+    return unsubscribe;
+  }, []);
+
+
   return (
     <LocationProvider>
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: Black }}>

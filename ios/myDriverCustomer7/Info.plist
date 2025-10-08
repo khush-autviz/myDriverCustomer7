@@ -41,6 +41,8 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>This app needs notification permission to send you ride updates, trip alerts, and important	 notifications.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>We need access to your camera</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
