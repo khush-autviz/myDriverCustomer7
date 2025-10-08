@@ -42,6 +42,8 @@
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>We use your location to provide accurate pickup and drop-off services, even when the app is not open, so your driver can find you and complete your rides safely.</string>
 	<key>UIAppFonts</key>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>This app needs notification permission to send you ride updates, trip alerts, and important notifications.</string>
 	<array>
 		<string>AntDesign.ttf</string>
 		<string>Entypo.ttf</string>

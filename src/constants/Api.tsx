@@ -101,3 +101,11 @@ export const deleteAccount = async (data: any) => {
     const response = await axios.post('/auth/delete-account', data)
     return response
 }
+
+// update FCM token
+export const updateFcmToken = async (fcmToken: string) => {
+    const response = await axios.post('/fcm/update-token', {
+        fcmToken: fcmToken
+    })
+    return response.data
+}
