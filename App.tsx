@@ -123,24 +123,34 @@ export default function App() {
       console.log('Foreground message:', remoteMessage);
 
       // Request permissions if needed
-      await notifee.requestPermission();
+      await notifee.requestPermission({
+        alert: true,
+        badge: true,
+        sound: true,
+      });
 
       // Create a channel (Android)
       const channelId = await notifee.createChannel({
         id: 'default',
         name: 'Default Channel',
         importance: AndroidImportance.HIGH,
+        vibration: true,
+        sound: 'default',
       });
 
       // Display a notification
       await notifee.displayNotification({
         title: remoteMessage.notification?.title,
         body: remoteMessage.notification?.body,
+        ios: {
+          sound: 'default',
+        },
         android: {
           channelId,
           pressAction: {
             id: 'default',
           },
+          sound: 'default',
         },
       });
     });
