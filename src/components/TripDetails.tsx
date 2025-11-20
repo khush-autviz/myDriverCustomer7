@@ -660,9 +660,14 @@ export default function TripDetails() {
                         <Ionicons name="person" size={24} color={Gold} />
                       </View> */}
                       <View style={styles.driverInfo}>
+                        <View style={{flexDirection: 'row', alignItems: 'center', gap: 5, justifyContent: 'space-between'}}>
                         <Text style={styles.driverName}>
-                          {rideInfo?.data?.data?.ride?.driver?.firstName ?? driverDetails?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName ?? driverDetails?.lastName}
+                          {rideInfo?.data?.data?.ride?.driver?.firstName ?? driverDetails?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName ?? driverDetails?.lastName} 
                         </Text>
+                        <Text style={{color: Gold, fontSize: 14, fontWeight: '600'}}>
+                        {rideInfo?.data?.data?.ride?.rating.toFixed(1) ?? 0} <Ionicons name="star" size={12} color={Gold} />
+                        </Text>
+                        </View>
                         {/* <View style={styles.driverMeta}>
                           <Ionicons name="star" size={14} color={Gold} />
                           <Text style={styles.driverRating}>4.8</Text>
@@ -837,6 +842,9 @@ export default function TripDetails() {
                       <View style={styles.driverInfo}>
                         <Text style={styles.driverName}>
                           {rideInfo?.data?.data?.ride?.driver?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName}
+                        </Text>
+                        <Text style={{color: Gold, fontSize: 14, fontWeight: '700'}}>
+                        {rideInfo?.data?.data?.ride?.rating.toFixed(1) ?? 0} <Ionicons name="star" size={12} color={Gold} />
                         </Text>
                         {/* <View style={styles.driverMeta}>
                           <Ionicons name="star" size={14} color={Gold} />
@@ -1163,6 +1171,9 @@ const styles = StyleSheet.create({
   },
   driverInfo: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   driverName: {
     color: Gold,
