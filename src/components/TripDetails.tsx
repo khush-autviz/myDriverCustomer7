@@ -669,6 +669,7 @@ export default function TripDetails() {
                         <Ionicons name="person" size={24} color={Gold} />
                       </View> */}
                       <View style={styles.driverInfo}>
+                        <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
                       <Image 
                               source={{ uri: `https://api.mydriversa.co.za/${rideInfo?.data?.data?.ride?.driver?.documents?.profilePhoto.image}` }}
                              
@@ -684,10 +685,14 @@ export default function TripDetails() {
                         <Text style={styles.driverName}>
                           {rideInfo?.data?.data?.ride?.driver?.firstName ?? driverDetails?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName ?? driverDetails?.lastName}
                         </Text>
+                        </View>
                         {/* <View style={styles.driverMeta}>
                           <Ionicons name="star" size={14} color={Gold} />
                           <Text style={styles.driverRating}>4.8</Text>
                         </View> */}
+                        <Text style={{color: Gold, fontSize: 14, fontWeight: '700'}}>
+                        {rideInfo?.data?.data?.ride?.rating.toFixed(1) ?? 0} <Ionicons name="star" size={12} color={Gold} />
+                        </Text>
                       </View>
                       {rideOtp && (
                         <View style={styles.otpBadge}>
@@ -1016,6 +1021,7 @@ export default function TripDetails() {
                         <Ionicons name="person" size={24} color={Gold} />
                       </View> */}
                       <View style={styles.driverInfo}>
+                        <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
                       <Image 
                               source={{ uri: `https://api.mydriversa.co.za/${rideInfo?.data?.data?.ride?.driver?.documents?.profilePhoto.image}` }}
                               // source={require('../assets/images/user.png')}
@@ -1028,6 +1034,10 @@ export default function TripDetails() {
                             />
                         <Text style={styles.driverName}>
                           {rideInfo?.data?.data?.ride?.driver?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName}
+                        </Text>
+                        </View>
+                        <Text style={{color: Gold, fontSize: 14, fontWeight: '700'}}>
+                        {rideInfo?.data?.data?.ride?.rating.toFixed(1) ?? 0} <Ionicons name="star" size={12} color={Gold} />
                         </Text>
                         {/* <View style={styles.driverMeta}>
                           <Ionicons name="star" size={14} color={Gold} />
@@ -1506,8 +1516,8 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    // justifyContent: 'space-between',
-    gap: 10,
+    justifyContent: 'space-between',
+    // gap: 10,
   },
   driverName: {
     color: Gold,
