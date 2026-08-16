@@ -40,7 +40,7 @@ export default function TripDetails() {
 
   const rideId = useAuthStore(state => state.rideId)
 
-// Log the locations received from route params
+  // Log the locations received from route params
   console.log('TripDetails - pickupLocation from route params:', pickupLocation);
   console.log('TripDetails - destinationLocation from route params:', destinationLocation);
 
@@ -181,38 +181,38 @@ export default function TripDetails() {
         pickupLocation: {
           address: pickupLocation?.description,
           coordinates: [
-            // pickupCoord?.latitude, pickupCoord?.longitude,
-            pickupLocation?.lat, pickupLocation?.lng
+            pickupLocation?.lng, pickupLocation?.lat
           ]
         },
         destination: {
           address: destinationLocation?.description,
           coordinates: [
-            // destinationCoord?.latitude, destinationCoord?.longitude,
-            destinationLocation?.lat, destinationLocation?.lng
+            destinationLocation?.lng, destinationLocation?.lat
           ]
         },
         vehicleId: selctedRide.vehicleId,
       }
+      console.log("[DEBUG FRONTEND] handleBookButton clicked, creating ride payload:", JSON.stringify(data, null, 2));
       CreateRideMutation.mutate(data)
     }
   }
 
   useEffect(() => {
     if (pickupCoord && destinationCoord) {
+      console.log("[DEBUG FRONTEND] pickupCoord:", pickupCoord);
+      console.log("[DEBUG FRONTEND] destinationCoord:", destinationCoord);
 
-      console.log("PRICE Ride COORD", pickupCoord, destinationCoord);
-      
       const data = {
         pickupCoords: {
-          latitude: pickupCoord.longitude,
-          longitude: pickupCoord.latitude
+          latitude: pickupCoord.latitude,
+          longitude: pickupCoord.longitude
         },
         destinationCoords: {
-          latitude: destinationCoord.longitude,
-          longitude: destinationCoord.latitude
+          latitude: destinationCoord.latitude,
+          longitude: destinationCoord.longitude
         }
       }
+      console.log("[DEBUG FRONTEND] sending calculate-prices data:", data);
       RidePriceMutation.mutateAsync(data)
     }
 
@@ -363,7 +363,7 @@ export default function TripDetails() {
       setmode(rideInfo?.data?.data?.ride?.status)
     }
 
-     if (rideInfo?.data?.data?.ride?.status === 'completed') {
+    if (rideInfo?.data?.data?.ride?.status === 'completed') {
       setmode('booking')
     }
 
@@ -379,23 +379,23 @@ export default function TripDetails() {
   }, [])
 
   console.log(mode, 'mode');
-  
+
 
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Black }}>
       <GestureHandlerRootView style={styles.container}>
-        { ( mode === 'booking' || mode === 'noDriversFound') && (
-        <TouchableOpacity
-          style={{
-            position: 'absolute',
-            top: 20,
-            left: 10,
-            zIndex: 100,
-          }}
-          onPress={() => navigation.navigate('Main')}>
-          <Ionicons name="chevron-back-circle" size={32} color={Gold} />
-        </TouchableOpacity>
+        {(mode === 'booking' || mode === 'noDriversFound') && (
+          <TouchableOpacity
+            style={{
+              position: 'absolute',
+              top: 20,
+              left: 10,
+              zIndex: 100,
+            }}
+            onPress={() => navigation.navigate('Main')}>
+            <Ionicons name="chevron-back-circle" size={32} color={Gold} />
+          </TouchableOpacity>
         )}
 
         {/* Re-center Button */}
@@ -478,7 +478,7 @@ export default function TripDetails() {
             // latitude: location?.latitude,
             // longitude: location?.longitude,
             latitude: pickupLocation?.lat ?? 0,     //CHANGE 
-             longitude: pickupLocation?.lng ?? 0,   //CHANGE 
+            longitude: pickupLocation?.lng ?? 0,   //CHANGE 
             latitudeDelta: 0.05,
             longitudeDelta: 0.05,
           }}
@@ -651,47 +651,47 @@ export default function TripDetails() {
                   contentContainerStyle={{ paddingBottom: 20 }}
                 >
                   {mode === 'accepted' && (
-                    <Text style={{color: White, fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 10, marginTop: 10}}>
+                    <Text style={{ color: White, fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 10, marginTop: 10 }}>
                       Your driver is on their way to pick you up
                     </Text>
                   )}
 
-{mode === 'arrived' && (
-                    <Text style={{color: White, fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 10, marginTop: 10}}>
+                  {mode === 'arrived' && (
+                    <Text style={{ color: White, fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 10, marginTop: 10 }}>
                       Your driver has arrived at your location
                     </Text>
                   )}
 
-                 {/* Driver Details Card */}
-                 <View style={styles.driverCard}>
+                  {/* Driver Details Card */}
+                  <View style={styles.driverCard}>
                     <View style={styles.driverHeader}>
                       {/* <View style={styles.driverAvatarContainer}>
                         <Ionicons name="person" size={24} color={Gold} />
                       </View> */}
                       <View style={styles.driverInfo}>
-                        <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
-                      <Image 
-                              source={{ uri: `https://api.mydriversa.co.za/${rideInfo?.data?.data?.ride?.driver?.documents?.profilePhoto.image}` }}
-                             
-                              
-                              style={{
-                                width: 35,
-                                height: 35,
-                                borderRadius: 16,
-                              }}
-                              resizeMode="cover"
-                              alt='...'
-                            />
-                        <Text style={styles.driverName}>
-                          {rideInfo?.data?.data?.ride?.driver?.firstName ?? driverDetails?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName ?? driverDetails?.lastName}
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                          <Image
+                            source={{ uri: `https://api.mydriversa.co.za/${rideInfo?.data?.data?.ride?.driver?.documents?.profilePhoto.image}` }}
+
+
+                            style={{
+                              width: 35,
+                              height: 35,
+                              borderRadius: 16,
+                            }}
+                            resizeMode="cover"
+                            alt='...'
+                          />
+                          <Text style={styles.driverName}>
+                            {rideInfo?.data?.data?.ride?.driver?.firstName ?? driverDetails?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName ?? driverDetails?.lastName}
+                          </Text>
                         </View>
                         {/* <View style={styles.driverMeta}>
                           <Ionicons name="star" size={14} color={Gold} />
                           <Text style={styles.driverRating}>4.8</Text>
                         </View> */}
-                        <Text style={{color: Gold, fontSize: 14, fontWeight: '700'}}>
-                        {rideInfo?.data?.data?.ride?.rating.toFixed(1) ?? 0} <Ionicons name="star" size={12} color={Gold} />
+                        <Text style={{ color: Gold, fontSize: 14, fontWeight: '700' }}>
+                          {rideInfo?.data?.data?.ride?.rating.toFixed(1) ?? 0} <Ionicons name="star" size={12} color={Gold} />
                         </Text>
                       </View>
                       {rideOtp && (
@@ -707,7 +707,7 @@ export default function TripDetails() {
                         <Text style={styles.vehicleText}>
                           {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand ?? driverDetails?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model ?? driverDetails?.vehicleDetails?.model}
                         </Text>
-                      {/* </View>
+                        {/* </View>
                       <View style={styles.vehicleDetail}> */}
                         {/* <Ionicons name="information-circle" size={18} color={Gold} /> */}
                         {/* <Text style={{color: Gold, fontSize: 14, fontWeight: '500'}}>•</Text> */}
@@ -748,17 +748,17 @@ export default function TripDetails() {
                               }}
                               resizeMode="cover"
                             /> */}
-                        <Text style={{
-                          color: Gold,
-                          fontSize: 16,
-                          fontWeight: '700',
-                        }}>
-                          Fellow Driver
-                        </Text>
-                      
-                      
+                      <Text style={{
+                        color: Gold,
+                        fontSize: 16,
+                        fontWeight: '700',
+                      }}>
+                        Fellow Driver
+                      </Text>
+
+
                       {/* Content */}
-                      <View style={{  }}>
+                      <View style={{}}>
                         {/* Driver Name */}
                         <View style={{
                           flexDirection: 'row',
@@ -774,7 +774,7 @@ export default function TripDetails() {
                             alignItems: 'center',
                             marginRight: 12,
                           }}>
-                            <Image 
+                            <Image
                               source={{ uri: `https://api.mydriversa.co.za/${rideInfo?.data?.data?.ride?.felowDriver?.profilePhoto}` }}
                               style={{
                                 width: 35,
@@ -885,7 +885,7 @@ export default function TripDetails() {
 
 
                   </View>
-                  
+
                   {/* Trip Route Card */}
                   <View style={styles.routeCard}>
                     {/* <View style={styles.routeHeader}>
@@ -904,13 +904,13 @@ export default function TripDetails() {
                       justifyContent: 'space-between',
                       alignItems: 'center',
                     }}>
-                      <Text style={{color: Gold, fontSize: 16, fontWeight: '700'}}>Fare</Text>
-                      <Text style={{color: Gold, fontSize: 16, fontWeight: '700'}}>R{rideInfo?.data?.data?.ride?.fare.toFixed(2)}</Text>
+                      <Text style={{ color: Gold, fontSize: 16, fontWeight: '700' }}>Fare</Text>
+                      <Text style={{ color: Gold, fontSize: 16, fontWeight: '700' }}>R{rideInfo?.data?.data?.ride?.fare.toFixed(2)}</Text>
                       {/* <Text style={{color: Gold, fontSize: 16, fontWeight: '700'}}>
                         <Ionicons name="cash" size={20} color={Gold} />
                       </Text> */}
                     </View>
-                    
+
                     {/* Pickup Location */}
                     <View style={styles.locationRow}>
                       {/* <View style={styles.locationDot}>
@@ -970,7 +970,7 @@ export default function TripDetails() {
                   contentContainerStyle={{ paddingBottom: 20 }}
                 >
                   {(mode === 'in_progress' || mode === 'otp_verified') && (
-                    <Text style={{color: White, fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 10, marginTop: 10}}>
+                    <Text style={{ color: White, fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 10, marginTop: 10 }}>
                       The ride is in progress
                     </Text>
                   )}
@@ -985,21 +985,21 @@ export default function TripDetails() {
                       <View style={styles.metricItem}>
                         {/* <Ionicons name="time" size={18} color={Gold} /> */}
                         {/* <View> */}
-                          <Text style={styles.metricLabel}>Fare</Text>
-                          <Text style={styles.metricValue}>R{rideInfo?.data?.data?.ride?.fare.toFixed(2)}</Text>
+                        <Text style={styles.metricLabel}>Fare</Text>
+                        <Text style={styles.metricValue}>R{rideInfo?.data?.data?.ride?.fare.toFixed(2)}</Text>
                         {/* </View> */}
                       </View>
                       <View style={styles.metricDivider} />
                       <View style={styles.metricItem}>
                         {/* <Ionicons name="speedometer" size={18} color={Gold} /> */}
                         {/* <View> */}
-                          <Text style={styles.metricLabel}>Distance</Text>
-                          <Text style={styles.metricValue}>{rideInfo?.data?.data?.ride?.distance.toFixed(2)} km</Text>
+                        <Text style={styles.metricLabel}>Distance</Text>
+                        <Text style={styles.metricValue}>{rideInfo?.data?.data?.ride?.distance.toFixed(2)} km</Text>
                         {/* </View> */}
                       </View>
                     </View>
                     {/* Destination Card */}
-                  {/* <View style={styles.destinationCard}> */}
+                    {/* <View style={styles.destinationCard}> */}
                     <View style={styles.destinationHeader}>
                       {/* <Ionicons name="flag" size={20} color={Gold} /> */}
                       <Text style={styles.destinationHeaderText}>Destination</Text>
@@ -1021,23 +1021,23 @@ export default function TripDetails() {
                         <Ionicons name="person" size={24} color={Gold} />
                       </View> */}
                       <View style={styles.driverInfo}>
-                        <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
-                      <Image 
-                              source={{ uri: `https://api.mydriversa.co.za/${rideInfo?.data?.data?.ride?.driver?.documents?.profilePhoto.image}` }}
-                              // source={require('../assets/images/user.png')}
-                              style={{
-                                width: 35,
-                                height: 35,
-                                borderRadius: 16,
-                              }}
-                              resizeMode="cover"
-                            />
-                        <Text style={styles.driverName}>
-                          {rideInfo?.data?.data?.ride?.driver?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName}
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                          <Image
+                            source={{ uri: `https://api.mydriversa.co.za/${rideInfo?.data?.data?.ride?.driver?.documents?.profilePhoto.image}` }}
+                            // source={require('../assets/images/user.png')}
+                            style={{
+                              width: 35,
+                              height: 35,
+                              borderRadius: 16,
+                            }}
+                            resizeMode="cover"
+                          />
+                          <Text style={styles.driverName}>
+                            {rideInfo?.data?.data?.ride?.driver?.firstName} {rideInfo?.data?.data?.ride?.driver?.lastName}
+                          </Text>
                         </View>
-                        <Text style={{color: Gold, fontSize: 14, fontWeight: '700'}}>
-                        {rideInfo?.data?.data?.ride?.rating.toFixed(1) ?? 0} <Ionicons name="star" size={12} color={Gold} />
+                        <Text style={{ color: Gold, fontSize: 14, fontWeight: '700' }}>
+                          {rideInfo?.data?.data?.ride?.rating.toFixed(1) ?? 0} <Ionicons name="star" size={12} color={Gold} />
                         </Text>
                         {/* <View style={styles.driverMeta}>
                           <Ionicons name="star" size={14} color={Gold} />
@@ -1052,7 +1052,7 @@ export default function TripDetails() {
                         <Text style={styles.vehicleText}>
                           {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model}
                         </Text>
-                      {/* </View>
+                        {/* </View>
                       <View style={styles.vehicleDetail}>
                         <Ionicons name="information-circle" size={18} color={Gold} /> */}
                         <Text style={styles.vehicleText}>
@@ -1083,18 +1083,18 @@ export default function TripDetails() {
                       // shadowRadius: 8,
                       // elevation: 5,
                     }}>
-                      
-                        <Text style={{
-                          color: Gold,
-                          fontSize: 16,
-                          fontWeight: '700',
-                        }}>
-                          Fellow Driver
-                        </Text>
-                      
-                      
+
+                      <Text style={{
+                        color: Gold,
+                        fontSize: 16,
+                        fontWeight: '700',
+                      }}>
+                        Fellow Driver
+                      </Text>
+
+
                       {/* Content */}
-                      <View style={{  }}>
+                      <View style={{}}>
                         {/* Driver Name */}
                         <View style={{
                           flexDirection: 'row',
@@ -1110,7 +1110,7 @@ export default function TripDetails() {
                             alignItems: 'center',
                             marginRight: 12,
                           }}>
-                             <Image 
+                            <Image
                               source={{ uri: `https://api.mydriversa.co.za/${rideInfo?.data?.data?.ride?.felowDriver?.profilePhoto}` }}
                               style={{
                                 width: 35,

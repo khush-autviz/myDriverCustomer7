@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.myDriver.autviz</string>
+	<string>com.myDriverApp.autviz</string>
 	<key>PROJECT_ID</key>
 	<string>mydriver-customer-67862</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:910716414059:ios:2ecd1606f53bf0d885e92e</string>
+	<string>1:910716414059:ios:2e9ed32e52948d0485e92e</string>
 </dict>
 </plist>
