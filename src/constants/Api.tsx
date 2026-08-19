@@ -102,3 +102,12 @@ export const updateFcmToken = async (fcmToken: string) => {
     })
     return response.data
 }
+
+// delete FCM token
+export const deleteFcmToken = async (fcmToken: string) => {
+    const response = await axios.post('/fcm/delete-token', {
+        fcmToken: fcmToken
+    })
+    return response.data
+}
+

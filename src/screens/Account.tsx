@@ -6,7 +6,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons'
 import { useAuthStore } from '../store/authStore'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'
-import { getWalletBalance } from '../constants/Api'
+import { getWalletBalance, deleteFcmToken } from '../constants/Api'
+import messaging from '@react-native-firebase/messaging'
 
 export default function Account() {
   var USER = useAuthStore(state => state.user)
@@ -41,7 +42,16 @@ export default function Account() {
     return `R${numAmount.toFixed(2)}`;
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const token = await messaging().getToken();
+      if (token) {
+        await deleteFcmToken(token);
+      }
+    } catch (error) {
+      console.error('Error deleting FCM token:', error);
+    }
+
     navigation.reset({
       index: 0,
       routes: [{name: 'Signin'}],
