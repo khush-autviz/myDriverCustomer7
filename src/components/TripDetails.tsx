@@ -1,4 +1,4 @@
-import { Dimensions, FlatList, Image, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, FlatList, Image, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
@@ -69,18 +69,28 @@ export default function TripDetails() {
   console.log(rideInfo, 'rideInfo');
 
 
-  // location details
-  const pickupCoord =
-    pickupLocation && pickupLocation.lat !== undefined && pickupLocation.lng !== undefined
-      // ? { latitude: pickupLocation.lat, longitude: pickupLocation.lng }
-      ? { latitude: pickupLocation.lat, longitude: pickupLocation.lng }
-      : undefined;
+  // location details - fallback to rideInfo coordinates when route params are undefined (e.g., app reopened from background/recents)
+  const pickupCoord = useMemo(() => {
+    if (pickupLocation && pickupLocation.lat !== undefined && pickupLocation.lng !== undefined) {
+      return { latitude: pickupLocation.lat, longitude: pickupLocation.lng };
+    }
+    const coords = rideInfo?.data?.data?.ride?.pickupLocation?.coordinates;
+    if (coords && Array.isArray(coords) && coords.length >= 2) {
+      return { latitude: coords[1], longitude: coords[0] };
+    }
+    return location?.latitude ? { latitude: location.latitude, longitude: location.longitude } : undefined;
+  }, [pickupLocation, rideInfo, location]);
 
-  const destinationCoord =
-    destinationLocation && destinationLocation.lat !== undefined && destinationLocation.lng !== undefined
-      // ? { latitude: destinationLocation.lat, longitude: destinationLocation.lng }
-      ? { latitude: destinationLocation.lat, longitude: destinationLocation.lng }
-      : undefined;
+  const destinationCoord = useMemo(() => {
+    if (destinationLocation && destinationLocation.lat !== undefined && destinationLocation.lng !== undefined) {
+      return { latitude: destinationLocation.lat, longitude: destinationLocation.lng };
+    }
+    const coords = rideInfo?.data?.data?.ride?.destination?.coordinates;
+    if (coords && Array.isArray(coords) && coords.length >= 2) {
+      return { latitude: coords[1], longitude: coords[0] };
+    }
+    return undefined;
+  }, [destinationLocation, rideInfo]);
 
   // Add re-center function
   const handleReCenter = useCallback(() => {
@@ -260,11 +270,15 @@ export default function TripDetails() {
   }, [navigation]);
 
   const handleDriverLocation = useCallback((data: any) => {
-    console.log('driver location', data.coords.latitude, data.coords.longitude);
-    setdriverLocation({
-      latitude: data.coords.latitude,
-      longitude: data.coords.longitude
-    });
+    const lat = data?.coords?.latitude ?? data?.latitude;
+    const lng = data?.coords?.longitude ?? data?.longitude;
+    if (lat && lng) {
+      console.log('📍 Driver location update received:', lat, lng);
+      setdriverLocation({
+        latitude: lat,
+        longitude: lng
+      });
+    }
   }, []);
 
   const handleRideCancelled = useCallback((data: any) => {
@@ -317,17 +331,17 @@ export default function TripDetails() {
   }, [socket, handleRideAccepted, handleDriverArrived, handleOtpVerified,
     handleRideCompleted, handleDriverLocation, handleRideCancelled]);
 
-  // Fix marker coordinates type issue
+  // Fix marker coordinates type issue - use pickupCoord and destinationCoord fallbacks when route.params is undefined (e.g. app reopened from recents)
   const markerCoordinates = useMemo(() => ({
-    pickup: pickupLocation?.lat && pickupLocation?.lng ? {
-      latitude: pickupLocation.lat,
-      longitude: pickupLocation.lng
+    pickup: pickupCoord ? {
+      latitude: pickupCoord.latitude,
+      longitude: pickupCoord.longitude
     } : null,
-    destination: destinationLocation?.lat && destinationLocation?.lng ? {
-      latitude: destinationLocation.lat,
-      longitude: destinationLocation.lng
+    destination: destinationCoord ? {
+      latitude: destinationCoord.latitude,
+      longitude: destinationCoord.longitude
     } : null
-  }), [pickupLocation, destinationLocation]);
+  }), [pickupCoord, destinationCoord]);
 
   // Compute route directions based on ride mode
   const routeDirections = useMemo(() => {
@@ -358,25 +372,46 @@ export default function TripDetails() {
   }, [mode, pickupCoord, destinationCoord, driverLocation]);
 
   useEffect(() => {
-    if (rideInfo?.data?.data?.ride?.status && rideInfo?.data?.data?.ride?.status !== 'cancelled' && rideInfo?.data?.data?.ride?.status !== 'searchingDriver') {
-      console.log(rideInfo?.data?.data?.ride?.status, 'rideInfo?.data?.data?.ride?.status');
-      setmode(rideInfo?.data?.data?.ride?.status)
+    const ride = rideInfo?.data?.data?.ride || rideInfo?.data?.ride;
+    if (ride?.status && ride?.status !== 'cancelled' && ride?.status !== 'searchingDriver') {
+      console.log(ride.status, 'ride status from API');
+      setmode(ride.status);
     }
 
-    if (rideInfo?.data?.data?.ride?.status === 'completed') {
-      setmode('booking')
+    if (ride?.status === 'completed') {
+      setmode('booking');
     }
 
-    if (rideInfo?.data?.data?.ride?.rideOtp) {
-      setrideOtp(rideInfo?.data?.data?.ride?.rideOtp)
+    if (ride?.rideOtp) {
+      setrideOtp(ride.rideOtp);
     }
-  }, [rideInfo])
+
+    // Initialize driver location from API data if available
+    const driver = ride?.driver;
+    if (driver) {
+      const driverId = driver._id || driver.id;
+      if (driverId && socket) {
+        socket.emit('subscribeToDriverLocation', driverId);
+      }
+      if (driver.currentLocation?.coordinates && driver.currentLocation.coordinates.length === 2) {
+        const [lng, lat] = driver.currentLocation.coordinates;
+        if (lat && lng) {
+          setdriverLocation((prev: any) => prev || { latitude: lat, longitude: lng });
+        }
+      }
+    }
+  }, [rideInfo, socket]);
 
   useEffect(() => {
+    refetch();
+  }, []);
 
-    refetch()
-
-  }, [])
+  // Auto-center map when pickupCoord becomes available (e.g. loaded asynchronously from API)
+  useEffect(() => {
+    if (pickupCoord) {
+      handleReCenter();
+    }
+  }, [pickupCoord, handleReCenter]);
 
   console.log(mode, 'mode');
 
@@ -475,10 +510,8 @@ export default function TripDetails() {
           showsCompass={false}
           provider='google'
           initialRegion={{
-            // latitude: location?.latitude,
-            // longitude: location?.longitude,
-            latitude: pickupLocation?.lat ?? 0,     //CHANGE 
-            longitude: pickupLocation?.lng ?? 0,   //CHANGE 
+            latitude: pickupCoord?.latitude || location?.latitude,
+            longitude: pickupCoord?.longitude || location?.longitude,
             latitudeDelta: 0.05,
             longitudeDelta: 0.05,
           }}
@@ -524,52 +557,68 @@ export default function TripDetails() {
             {(mode === 'booking' || mode === "noDriversFound") && (
               <>
                 <ScrollView style={{ maxHeight: '100%' }}>
-                  {ridePrices.map((item: any) => (
-                    <TouchableOpacity
-                      key={item.vehicleId}
-                      onPress={() => setselctedRide(item)}
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 10,
-                        borderColor: Gold,
-                        borderWidth: item.vehicleId === selctedRide?.vehicleId ? 3 : 1,
-                        borderRadius: 8,
-                        paddingVertical: item.vehicleId === selctedRide?.vehicleId ? 15 : 12,
-                        paddingHorizontal: 10,
-                        marginBottom: 10,
-                      }}>
-                      <View
+                  {RidePriceMutation.isPending ? (
+                    <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 30 }}>
+                      <ActivityIndicator size="large" color={Gold} />
+                      <Text style={{ color: LightGold, fontSize: 14, marginTop: 12, fontWeight: '500' }}>
+                        Calculating trip estimates...
+                      </Text>
+                    </View>
+                  ) : ridePrices.length === 0 ? (
+                    <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 30 }}>
+                      <Ionicons name="alert-circle-outline" size={40} color={Gray} />
+                      <Text style={{ color: Gray, fontSize: 14, marginTop: 8, textAlign: 'center' }}>
+                        No price estimates available
+                      </Text>
+                    </View>
+                  ) : (
+                    ridePrices.map((item: any) => (
+                      <TouchableOpacity
+                        key={item.vehicleId}
+                        onPress={() => setselctedRide(item)}
                         style={{
                           display: 'flex',
                           flexDirection: 'row',
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           gap: 10,
-                        }}>{item.vehicleType.includes('bike') ?
-                          <Image source={require('../assets/logo/motorcycle.png')} style={{ width: 35, height: 35 }} /> : <Image source={require('../assets/logo/car.png')} style={{ width: 35, height: 35 }} />}
-                        <View>
-                          <Text
-                            style={{
-                              color: LightGold,
-                              fontSize: 14,
-                              fontWeight: '500',
-                            }}>
-                            {item.vehicleType === 'bike' ? 'Bike' : item.vehicleType === 'car' ? 'Car' : item.vehicleType === 'bikeWithExtraDriver' ? 'Bike + Driver' : item.vehicleType === 'carWithExtraDriver' ? 'Car + Driver' : ''}
-                          </Text>
-                          <Text style={{ color: Gray, fontSize: 12, flexShrink: 1, flexWrap: 'wrap' }}>
-                            {item.description.substr(0, 30)}..
-                          </Text>
+                          borderColor: Gold,
+                          borderWidth: item.vehicleId === selctedRide?.vehicleId ? 3 : 1,
+                          borderRadius: 8,
+                          paddingVertical: item.vehicleId === selctedRide?.vehicleId ? 15 : 12,
+                          paddingHorizontal: 10,
+                          marginBottom: 10,
+                        }}>
+                        <View
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 10,
+                          }}>{item.vehicleType.includes('bike') ?
+                            <Image source={require('../assets/logo/motorcycle.png')} style={{ width: 35, height: 35 }} /> : <Image source={require('../assets/logo/car.png')} style={{ width: 35, height: 35 }} />}
+                          <View>
+                            <Text
+                              style={{
+                                color: LightGold,
+                                fontSize: 14,
+                                fontWeight: '500',
+                              }}>
+                              {item.vehicleType === 'bike' ? 'Bike' : item.vehicleType === 'car' ? 'Car' : item.vehicleType === 'bikeWithExtraDriver' ? 'Bike + Driver' : item.vehicleType === 'carWithExtraDriver' ? 'Car + Driver' : ''}
+                            </Text>
+                            <Text style={{ color: Gray, fontSize: 12, flexShrink: 1, flexWrap: 'wrap' }}>
+                              {item.description.substr(0, 30)}..
+                            </Text>
+                          </View>
                         </View>
-                      </View>
-                      <Text
-                        style={{ color: LightGold, fontSize: 14, fontWeight: '700' }}>
-                        R{item.price}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                        <Text
+                          style={{ color: LightGold, fontSize: 14, fontWeight: '700' }}>
+                          R{item.price}
+                        </Text>
+                      </TouchableOpacity>
+                    ))
+                  )}
                 </ScrollView>
                 {/* </View> */}
                 <View
@@ -585,19 +634,24 @@ export default function TripDetails() {
                       borderRadius: 8,
                       padding: 15,
                       marginTop: 10,
+                      opacity: (RidePriceMutation.isPending || CreateRideMutation.isPending || !selctedRide) ? 0.5 : 1,
                     }}
                     onPress={handleBookButton}
-                    disabled={CreateRideMutation.isPending}
+                    disabled={RidePriceMutation.isPending || CreateRideMutation.isPending || !selctedRide}
                   >
-                    <Text
-                      style={{
-                        color: White,
-                        fontSize: 14,
-                        fontWeight: '700',
-                        textAlign: 'center',
-                      }}>
-                      Book Now
-                    </Text>
+                    {CreateRideMutation.isPending ? (
+                      <ActivityIndicator size="small" color={White} />
+                    ) : (
+                      <Text
+                        style={{
+                          color: White,
+                          fontSize: 14,
+                          fontWeight: '700',
+                          textAlign: 'center',
+                        }}>
+                        {RidePriceMutation.isPending ? 'Calculating...' : !selctedRide ? 'Select Option' : 'Book Now'}
+                      </Text>
+                    )}
                   </TouchableOpacity>
                 </View>
               </>
@@ -694,7 +748,7 @@ export default function TripDetails() {
                           {rideInfo?.data?.data?.ride?.rating.toFixed(1) ?? 0} <Ionicons name="star" size={12} color={Gold} />
                         </Text>
                       </View>
-                      {rideOtp && (
+                      {rideOtp && mode === 'arrived' && (
                         <View style={styles.otpBadge}>
                           <Text style={styles.otpBadgeText}>OTP: {rideOtp}</Text>
                         </View>
