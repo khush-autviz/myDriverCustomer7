@@ -63,10 +63,6 @@ export default function TripDetails() {
     staleTime: 0,
   })
 
-  console.log(rideId, 'rideId new check');
-
-
-  console.log(rideInfo, 'rideInfo');
 
 
   // location details - fallback to rideInfo coordinates when route params are undefined (e.g., app reopened from background/recents)
@@ -472,9 +468,15 @@ export default function TripDetails() {
                 keyExtractor={(item) => item}
                 renderItem={({ item }) => (
                   <TouchableOpacity
-                    style={styles.reasonButton}
+                    style={[styles.reasonButton, cancelRideMutation.isPending && { opacity: 0.5 }]}
                     activeOpacity={0.7}
+                    disabled={cancelRideMutation.isPending}
                     onPress={() => {
+                      if (!rideId || rideId === 'null' || rideId === 'undefined') {
+                        ShowToast("No active ride to cancel", { type: 'error' });
+                        setmodalVisible(false);
+                        return;
+                      }
                       cancelRideMutation.mutate({
                         id: rideId,
                         payload: { reason: item }
@@ -482,7 +484,11 @@ export default function TripDetails() {
                     }}
                   >
                     <Text style={styles.reasonText}>{item}</Text>
-                    <Ionicons name="chevron-forward" size={20} color={Gold} />
+                    {cancelRideMutation.isPending ? (
+                      <ActivityIndicator size="small" color={Gold} />
+                    ) : (
+                      <Ionicons name="chevron-forward" size={20} color={Gold} />
+                    )}
                   </TouchableOpacity>
                 )}
                 showsVerticalScrollIndicator={false}
@@ -745,7 +751,7 @@ export default function TripDetails() {
                           <Text style={styles.driverRating}>4.8</Text>
                         </View> */}
                         <Text style={{ color: Gold, fontSize: 14, fontWeight: '700' }}>
-                          {rideInfo?.data?.data?.ride?.rating.toFixed(1) ?? 0} <Ionicons name="star" size={12} color={Gold} />
+                          {(rideInfo?.data?.data?.ride?.rating ?? rideInfo?.data?.data?.ride?.driver?.averageRating ?? driverDetails?.averageRating ?? 5.0)?.toFixed(1)} <Ionicons name="star" size={12} color={Gold} />
                         </Text>
                       </View>
                       {rideOtp && mode === 'arrived' && (
@@ -773,7 +779,7 @@ export default function TripDetails() {
                         <Ionicons name="call" size={20} color={Gold} />
                         <TouchableOpacity onPress={() => Linking.openURL(`tel:${rideInfo?.data?.data?.ride?.driver?.phone ?? driverDetails?.phone}`)}>
                           <Text style={styles.vehicleText}>
-                            {rideInfo?.data?.data?.ride?.driver?.phone ?? driverDetails?.phone}
+                            {rideInfo?.data?.data?.ride?.driver?.phone ?? driverDetails?.phone ?? 'Not available'}
                           </Text>
                         </TouchableOpacity>
                       </TouchableOpacity>
@@ -1091,7 +1097,7 @@ export default function TripDetails() {
                           </Text>
                         </View>
                         <Text style={{ color: Gold, fontSize: 14, fontWeight: '700' }}>
-                          {rideInfo?.data?.data?.ride?.rating.toFixed(1) ?? 0} <Ionicons name="star" size={12} color={Gold} />
+                          {(rideInfo?.data?.data?.ride?.rating ?? rideInfo?.data?.data?.ride?.driver?.averageRating ?? driverDetails?.averageRating ?? 5.0)?.toFixed(1)} <Ionicons name="star" size={12} color={Gold} />
                         </Text>
                         {/* <View style={styles.driverMeta}>
                           <Ionicons name="star" size={14} color={Gold} />
@@ -1104,20 +1110,20 @@ export default function TripDetails() {
                       <View style={styles.vehicleDetail}>
                         <Ionicons name="car" size={18} color={Gold} />
                         <Text style={styles.vehicleText}>
-                          {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model}
+                          {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.brand ?? driverDetails?.vehicleDetails?.brand} {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.model ?? driverDetails?.vehicleDetails?.model}
                         </Text>
                         {/* </View>
                       <View style={styles.vehicleDetail}>
                         <Ionicons name="information-circle" size={18} color={Gold} /> */}
                         <Text style={styles.vehicleText}>
-                          {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.licensePlate}
+                          {rideInfo?.data?.data?.ride?.driver?.vehicleDetails?.licensePlate ?? driverDetails?.vehicleDetails?.licensePlate}
                         </Text>
                       </View>
                       <TouchableOpacity style={styles.vehicleDetail}>
                         <Ionicons name="call" size={18} color={Gold} />
-                        <TouchableOpacity onPress={() => Linking.openURL(`tel:${rideInfo?.data?.data?.ride?.driver?.phone}`)}>
+                        <TouchableOpacity onPress={() => Linking.openURL(`tel:${rideInfo?.data?.data?.ride?.driver?.phone ?? driverDetails?.phone}`)}>
                           <Text style={styles.vehicleText}>
-                            {rideInfo?.data?.data?.ride?.driver?.phone}
+                            {rideInfo?.data?.data?.ride?.driver?.phone ?? driverDetails?.phone ?? 'Not available'}
                           </Text>
                         </TouchableOpacity>
                       </TouchableOpacity>

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Keyboard, TouchableWithoutFeedback } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Black, DarkGray, Gold, Gray, LightGold, White } from '../constants/Color'
@@ -36,6 +36,7 @@ export default function Ratings() {
   })
 
   const handleRatingSubmit = () => {
+    Keyboard.dismiss();
     if(rating === 0 || feedback.trim() === '') {
       ShowToast('Please fill all the fields', {type: 'error'})
       return
@@ -44,42 +45,50 @@ export default function Ratings() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* {ratingsMutation.isPending && (
-        <ActivityIndicator size="large" color={Gold} />
-      )} */}
-      {ratingsMutation.isPending ?
-         <Loader />
-        :
-        <>
-      <View style={styles.header}>
-        {/* <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Gold} />
-        </TouchableOpacity> */}
-        <Text style={styles.headerText}>Rate Your Trip</Text>
-        <TouchableOpacity style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}} onPress={() => {
-          setRideId(null)
-          navigation.navigate('Main')
-        }}>
-          <Text style={{color: Gold, fontSize: 16, fontWeight: '500'}}>Skip</Text>
-          <Ionicons name="chevron-forward" size={24} color={Gold} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.ratingContainer}>
-        <Text style={styles.ratingTitle}>How was your trip?</Text>
-        
-        <View style={styles.starsContainer}>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <TouchableOpacity key={star} onPress={() => setRating(star)}>
-              <Ionicons 
-                name={rating >= star ? "star" : "star-outline"} 
-                size={40} 
-                color={Gold} 
-              />
-            </TouchableOpacity>
-          ))}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <SafeAreaView style={styles.container}>
+        {/* {ratingsMutation.isPending && (
+          <ActivityIndicator size="large" color={Gold} />
+        )} */}
+        {ratingsMutation.isPending ?
+          <Loader />
+          :
+          <>
+        <View style={styles.header}>
+          {/* <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color={Gold} />
+          </TouchableOpacity> */}
+          <Text style={styles.headerText}>Rate Your Trip</Text>
+          <TouchableOpacity style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}} onPress={() => {
+            Keyboard.dismiss();
+            setRideId(null)
+            navigation.navigate('Main')
+          }}>
+            <Text style={{color: Gold, fontSize: 16, fontWeight: '500'}}>Skip</Text>
+            <Ionicons name="chevron-forward" size={24} color={Gold} />
+          </TouchableOpacity>
         </View>
+
+        <View style={styles.ratingContainer}>
+          <Text style={styles.ratingTitle}>How was your trip?</Text>
+          
+          <View style={styles.starsContainer}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity 
+                key={star} 
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setRating(star);
+                }}
+              >
+                <Ionicons 
+                  name={rating >= star ? "star" : "star-outline"} 
+                  size={40} 
+                  color={Gold} 
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
         
         <View style={styles.feedbackContainer}>
           <Text style={styles.feedbackLabel}>Additional Feedback</Text>
@@ -103,7 +112,8 @@ export default function Ratings() {
       </TouchableOpacity>
       </>
       }
-    </SafeAreaView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   )
 }
 
